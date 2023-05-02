@@ -1,5 +1,5 @@
 import gymnasium as gym
-env = gym.make("LunarLander", render_mode="human")
+env = gym.make("CarRacing", render_mode="human")
 # env = gym.make("LunarLander")
 observation, info = env.reset()
 
