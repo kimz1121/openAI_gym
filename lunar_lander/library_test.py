@@ -1,6 +1,6 @@
 import gymnasium as gym
-env = gym.make("LunarLander", render_mode="human")
-# env = gym.make("LunarLander")
+env = gym.make("LunarLander-v2", render_mode="human")
+# env = gym.make("LunarLander-v2")
 observation, info = env.reset()
 
 for _ in range(1000):
