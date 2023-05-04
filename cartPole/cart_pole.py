@@ -2,6 +2,9 @@
 https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=msnayana&logNo=221431225117
 """
 
+# 이 예제... 절차는 정상적이되, 자료를 다루는 구조는 뭐하나 정상적인 것이 벼로 없다. 
+# 난잡한 자료를 다루는 중첩적이고 복잡한 방식에 따른 세세한 오류가 너무 많음 
+# 이 예제는 버린다. 
 
 import gymnasium as gym
 import numpy as np
@@ -83,7 +86,7 @@ def get_predict(model, obs):
 
 
 def agent_driving(model, limit_step, i_episode, top_cut, function = lambda a_1, a_2: random.randrange(0, 2), render=False, test=False):
-    work_data  =[]
+    work_data = np.empty((1, 4)) 
     for i in range (i_episode):
         reward_sum = 0
         work_step = []
@@ -91,23 +94,39 @@ def agent_driving(model, limit_step, i_episode, top_cut, function = lambda a_1, 
         for step in range (limit_step):
             if render : env.render()
             action = function(model, obs)
+
             work_step.append((obs, action))
             obs, reward, terminated, truncated, info = env.step(action)
             reward_sum += reward
             if not test:
                 if terminated:
                     break
-        work_data.append((reward_sum, work_step))
+
+        print("======")
+        print(type(obs))
+        print(type(action))
+
+        print("======")
+        print(type(reward_sum))
+        print(type(work_step))
+
+        work_data.append(reward_sum, work_step)
+        print(work_data)
 
     work_data.sort(key=lambda s:-s[0])
 
-    data_set_input = np.array([[],[],[],[]])
-    data_set_output = np.array([[],[]])
-    print(data_set_output.shape)
+    data_set_input = np.empty((1, 4))
+    data_set_output = np.empty((1, 2))
+    print(data_set_input.shape)
     print(data_set_output.shape)
     dsum = 0
     for i in range(top_cut):
         for step in work_data[i][1]:
+            print("======")
+            print(np.asarray(step[0], dtype = "float"))
+            
+            print("======")
+            print(np.asarray(step[0], dtype = "float").shape)
             if step[1] == 0:  
                 data_set_input = np.append(data_set_input, np.asarray([step[0]]), axis=0)
                 data_set_output = np.append(data_set_output, np.asarray([[1, 0]]), axis=0)
