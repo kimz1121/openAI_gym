@@ -56,9 +56,9 @@ def drive_env_random(env_arg, num_of_frame_arg):
 
     observation, info = env_arg.reset()# 초기 상태에 관한 정보.
 
-    print(observation)
-    print(type(observation))
-    print(observation.shape)
+    # print(observation)
+    # print(type(observation))
+    # print(observation.shape)
 
     x_input_rtn = np.empty((num_of_frame_arg, 8+1))
     y_output_rtn = np.empty((num_of_frame_arg, 1))
@@ -70,16 +70,16 @@ def drive_env_random(env_arg, num_of_frame_arg):
         # reward는 프래임 단위로 주어진다.
         # 한 프래임의 action에 대하여 하나의 reward를 주는 방식. 
 
-        print(action)
-        print(type(action))
-        print(observation.shape)
+        # print(action)
+        # print(type(action))
+        # print(observation.shape)
 
         x_input_rtn[i, 0:8] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:8 이면 끝나는 인덱스가 0번 부터 7번까지
         x_input_rtn[i, 8] = action
         y_output_rtn[i, :] = reward
         print(i)
-        print(reward)
-        print(type(reward))
+        # print(reward)
+        # print(type(reward))
 
         if terminated or truncated: 
             # 시뮬레이터가 종료되면 재시작이 필요
@@ -87,13 +87,30 @@ def drive_env_random(env_arg, num_of_frame_arg):
             observation, info = env_arg.reset()
 
 
-    print(x_input_rtn.shape)
-    print(y_output_rtn.shape)
+    # print(x_input_rtn.shape)
+    # print(y_output_rtn.shape)
 
-    print(x_input_rtn[num_of_frame_arg-1, :])
-    print(y_output_rtn[num_of_frame_arg-1, :])
+    # print(x_input_rtn[num_of_frame_arg-1, :])
+    # print(y_output_rtn[num_of_frame_arg-1, :])
 
     return x_input_rtn, y_output_rtn
+
+
+def drive_env_by_model(env_arg, num_of_frame_arg, model_arg, action_sapce_arg):
+    observation, info = env_arg.reset()
+
+    perdict_model(model_arg, observation, action_sapce_arg)
+
+    for i in range(num_of_frame_arg):
+        action = pick_action(model_arg, observation, action_sapce_arg)
+        # print("=================")
+        # print(type(action))
+        # print(action)
+        observation, reward, terminated, truncated, info = env_arg.step(action)
+
+        if terminated or truncated: 
+            observation, info = env_arg.reset()
+
 
 def create_model():
     model_rtn = Sequential()
@@ -105,8 +122,28 @@ def create_model():
     
     return model_rtn
 
+def create_model_sigmoid():
+    model_rtn = Sequential()
+    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(Dense(128, activation='sigmoid'))
+    model_rtn.add(Dense(64, activation='sigmoid'))
+    model_rtn.add(Dense(1, activation='sigmoid'))
+    model_rtn.compile(loss='mse', optimizer=Adam())
+    
+    return model_rtn
+
+def create_model_relu():
+    model_rtn = Sequential()
+    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(Dense(128, activation='relu'))
+    model_rtn.add(Dense(64, activation='relu'))
+    model_rtn.add(Dense(1, activation='relu'))
+    model_rtn.compile(loss='mse', optimizer=Adam())
+    
+    return model_rtn
+
 def learning_model(model_arg, x_input_arg, y_output_arg):
-    model_arg.fit(x_input_arg, y_output_arg, batch_size=10, epochs = 5)
+    model_arg.fit(x_input_arg, y_output_arg, batch_size=50, epochs = 5)
 
 def perdict_model(model_arg, observation_arg, action_sapce_arg):
     # it retruns action values at observation
@@ -119,26 +156,45 @@ def perdict_model(model_arg, observation_arg, action_sapce_arg):
     action_value_rtn = np.empty((action_space_column_len))
     model_input = np.empty((1, observation_space_column_len + 1))
     
-    print(model_input.shape)
+    # print(model_input.shape)
     for i in range(action_space_column_len):#action_space_arg의 열길이에 따라 평가를 반복
         action = action_sapce_arg[i]
-        print("================")
-        print(observation_arg)
-        print(action)
+        # print("================")
+        # print(observation_arg)
+        # print(action)
         model_input[0, 0:8] = observation_arg  # 0~7번 인덱스
         model_input[0, 8] = action             #8번 인덱스
-        print(model_input)
-        print(model_input.shape)
+        # print(model_input)
+        # print(model_input.shape)
         
-        action_value_rtn[i] = model_arg.predict(model_input) # model input은 "1차원 길이 (9)" 형태가 아닌 2차원 크기 (1, 9) 로 사용하여야 한다. 
+        action_value_rtn[i] = model_arg.predict(model_input, verbose = 0) # model input은 "1차원 길이 (9)" 형태가 아닌 2차원 크기 (1, 9) 로 사용하여야 한다. 
 
     return action_value_rtn
 
-if __name__ == '__main__':
-    env = gym.make("LunarLander-v2", render_mode="human")
+def pick_action(model_arg, observation_arg, action_sapce_arg):
+    action_value = perdict_model(model_arg, observation_arg, action_sapce_arg)
+    action_index = action_value.argmax()
+    action_pick = action_sapce_arg[action_index]
 
-    num_of_frame = 100
+    print("=================")
+    print(type(action_value))
+    print(action_value)
+    print(type(action_index))
+    print(action_index)
+    print(type(action_pick))
+    print(action_pick)
+
+    return action_pick
+
+if __name__ == '__main__':
+    # env = gym.make("LunarLander-v2", render_mode="human")
+    env = gym.make("LunarLander-v2")
+
+    num_of_frame = 100000
     x_input, y_output = drive_env_random(env, num_of_frame)
+
+    env.close()
+
     print(x_input.shape)
     print(y_output.shape)
 
@@ -146,15 +202,15 @@ if __name__ == '__main__':
     learning_model(model_glb, x_input, y_output)
     
     # test_obs = np.array([ 0.84823453  0.26283216  1.11286175 -1.18096614 -0.27859148 -0.07228909,  0.          0.          0.        ])
-    test_obs = np.array([0.84823453, 0.26283216, 1.11286175, -1.18096614, -0.27859148, -0.07228909, 0, 0])
+    test_obs = np.array([0.84823453, 0.26283216, 0, 0, 0, 0, 0, 1])
 
     model_glb.summary()
     # keras.utils.plot_model(model_glb, "my_first_model_with_shape_info.png", show_shapes=True)
 
 
     action_space = np.array([0, 1, 2, 3])
-    # print(action_space.shape)
     action_value = perdict_model(model_glb, test_obs, action_space)
-    # print(action_value)
-
+    
+    env = gym.make("LunarLander-v2", render_mode="human")
+    drive_env_by_model(env, 500, model_glb, action_space)
     env.close()
