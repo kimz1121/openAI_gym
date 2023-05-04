@@ -4,7 +4,7 @@ import numpy as np
 
 import time
 
-
+import keras
 from keras.models       import Sequential
 from keras.layers       import Dense
 from keras.optimizers   import Adam
@@ -97,8 +97,8 @@ def drive_env_random(env_arg, num_of_frame_arg):
 
 def create_model():
     model_rtn = Sequential()
-    
-    model_rtn.add(Dense(128, input_dim=9, activation='sigmoid'))
+    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
     model_rtn.compile(loss='mse', optimizer=Adam())
@@ -106,7 +106,7 @@ def create_model():
     return model_rtn
 
 def learning_model(model_arg, x_input_arg, y_output_arg):
-    model_arg.fit(x_input_arg, y_output_arg, epochs = 5)
+    model_arg.fit(x_input_arg, y_output_arg, batch_size=10, epochs = 5)
 
 def perdict_model(model_arg, observation_arg, action_sapce_arg):
     # it retruns action values at observation
@@ -117,27 +117,30 @@ def perdict_model(model_arg, observation_arg, action_sapce_arg):
     observation_space_column_len = observation_arg.shape[0]
 
     action_value_rtn = np.empty((action_space_column_len))
-    model_input = np.empty(observation_space_column_len + action_space_column_len)
+    model_input = np.empty((1, observation_space_column_len + 1))
+    
+    print(model_input.shape)
     for i in range(action_space_column_len):#action_space_arg의 열길이에 따라 평가를 반복
         action = action_sapce_arg[i]
         print("================")
         print(observation_arg)
         print(action)
-        model_input[0:8] = observation_arg  # 0~7번 인덱스
-        model_input[8] = action             #8번 인덱스
-        action_value_rtn[i] = model_arg.predict(model_input)
+        model_input[0, 0:8] = observation_arg  # 0~7번 인덱스
+        model_input[0, 8] = action             #8번 인덱스
+        print(model_input)
+        print(model_input.shape)
+        
+        action_value_rtn[i] = model_arg.predict(model_input) # model input은 "1차원 길이 (9)" 형태가 아닌 2차원 크기 (1, 9) 로 사용하여야 한다. 
 
     return action_value_rtn
 
 if __name__ == '__main__':
     env = gym.make("LunarLander-v2", render_mode="human")
 
-    num_of_frame = 500
+    num_of_frame = 100
     x_input, y_output = drive_env_random(env, num_of_frame)
-    
-    # print("sleep...")
-    # time.sleep(5)
-    # x_input, y_output = drive_env_random(env, num_of_frame)
+    print(x_input.shape)
+    print(y_output.shape)
 
     model_glb = create_model()
     learning_model(model_glb, x_input, y_output)
@@ -145,9 +148,13 @@ if __name__ == '__main__':
     # test_obs = np.array([ 0.84823453  0.26283216  1.11286175 -1.18096614 -0.27859148 -0.07228909,  0.          0.          0.        ])
     test_obs = np.array([0.84823453, 0.26283216, 1.11286175, -1.18096614, -0.27859148, -0.07228909, 0, 0])
 
+    model_glb.summary()
+    # keras.utils.plot_model(model_glb, "my_first_model_with_shape_info.png", show_shapes=True)
+
+
     action_space = np.array([0, 1, 2, 3])
-    print(action_space.shape)
+    # print(action_space.shape)
     action_value = perdict_model(model_glb, test_obs, action_space)
-    print(action_value)
+    # print(action_value)
 
     env.close()
