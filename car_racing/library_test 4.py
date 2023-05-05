@@ -187,8 +187,8 @@ def pick_action(model_arg, observation_arg, action_sapce_arg):
     return action_pick
 
 if __name__ == '__main__':
-    # env = gym.make("LunarLander-v2", render_mode="human")
-    env = gym.make("LunarLander-v2")
+    # env = gym.make("CarRacing-v2", render_mode="human")
+    env = gym.make("CarRacing-v2")
 
     num_of_frame = 100000
     x_input, y_output = drive_env_random(env, num_of_frame)
@@ -208,9 +208,9 @@ if __name__ == '__main__':
     # keras.utils.plot_model(model_glb, "my_first_model_with_shape_info.png", show_shapes=True)
 
 
-    action_space = np.array([0, 1, 2, 3])
+    action_space = np.array([0, 1, 2, 3, 4])
     action_value = perdict_model(model_glb, test_obs, action_space)
     
-    env = gym.make("LunarLander-v2", render_mode="human")
+    env = gym.make("CarRacing-v2", render_mode="human")
     drive_env_by_model(env, 500, model_glb, action_space)
     env.close()

@@ -60,13 +60,17 @@ def drive_env_random(env_arg, num_of_frame_arg):
     # print(type(observation))
     # print(observation.shape)
 
-    x_input_rtn = np.empty((num_of_frame_arg, 8+1))
+    x_input_rtn = np.empty((num_of_frame_arg, 4+1))
     y_output_rtn = np.empty((num_of_frame_arg, 1))
 
-
-    for i in range(num_of_frame_arg):    
+    reward_sum = 0
+    frame = 0
+    eta = 0.1
+    for i in range(num_of_frame_arg):
+        frame += 1
         action = env_arg.action_space.sample()  # agent policy that uses the observation and info
         observation, reward, terminated, truncated, info = env_arg.step(action)
+        reward_sum += reward
         # reward는 프래임 단위로 주어진다.
         # 한 프래임의 action에 대하여 하나의 reward를 주는 방식. 
 
@@ -74,10 +78,11 @@ def drive_env_random(env_arg, num_of_frame_arg):
         # print(type(action))
         # print(observation.shape)
 
-        x_input_rtn[i, 0:8] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:8 이면 끝나는 인덱스가 0번 부터 7번까지
-        x_input_rtn[i, 8] = action
-        y_output_rtn[i, :] = reward
-        print(i)
+        x_input_rtn[i, 0:4] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
+        x_input_rtn[i, 4] = action
+        y_output_rtn[i, :] = reward_sum
+        if i % 1000 == 0:
+            print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         # print(reward)
         # print(type(reward))
 
@@ -85,6 +90,16 @@ def drive_env_random(env_arg, num_of_frame_arg):
             # 시뮬레이터가 종료되면 재시작이 필요
             # 조건에 따라 상황이 종료되면, 쓸모있는 데이터를 모을 것으로 기대되는 상황이 더이상 없다고 취급한다.
             observation, info = env_arg.reset()
+            if  frame >= 3 and terminated:
+                y_output_rtn[i, :] = -15
+                y_output_rtn[i-1, :] = -10
+                y_output_rtn[i-2, :] = -5
+
+            frame = 0
+            reward_sum = 0
+
+        
+
 
 
     # print(x_input_rtn.shape)
@@ -101,20 +116,80 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg, action_sapce_arg):
 
     perdict_model(model_arg, observation, action_sapce_arg)
 
+    x_input_rtn = np.empty((num_of_frame_arg, 4+1))
+    y_output_rtn = np.empty((num_of_frame_arg, 1))
+
+    reward_sum = 0
+    frame = 0
+    eta = 0.2
     for i in range(num_of_frame_arg):
+        frame += 1
         action = pick_action(model_arg, observation, action_sapce_arg)
         # print("=================")
         # print(type(action))
         # print(action)
         observation, reward, terminated, truncated, info = env_arg.step(action)
-
+        reward_sum += reward
+        x_input_rtn[i, 0:4] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
+        x_input_rtn[i, 4] = action
+        y_output_rtn[i, :] = reward_sum
+        
+        if i % 10 == 0:
+            print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
+        
         if terminated or truncated: 
             observation, info = env_arg.reset()
+            if  frame >= 3 and terminated:
+                y_output_rtn[i, :] = -15
+                y_output_rtn[i-1, :] = -10
+                y_output_rtn[i-2, :] = -5
+
+            frame = 0
+            reward_sum = 0
+
+    return x_input_rtn, y_output_rtn
+
+
+def drive_env_by_model_verbose(env_arg, num_of_frame_arg, model_arg, action_sapce_arg):
+    observation, info = env_arg.reset()
+
+    perdict_model(model_arg, observation, action_sapce_arg)
+
+    x_input_rtn = np.empty((num_of_frame_arg, 4+1))
+    y_output_rtn = np.empty((num_of_frame_arg, 1))
+
+    reward_sum = 0
+    frame = 0
+    eta = 0.2
+    for i in range(num_of_frame_arg):
+        frame += 1
+        action = pick_action_verbose(model_arg, observation, action_sapce_arg)
+        # print("=================")
+        # print(type(action))
+        # print(action)
+        observation, reward, terminated, truncated, info = env_arg.step(action)
+        reward_sum += reward
+        x_input_rtn[i, 0:4] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
+        x_input_rtn[i, 4] = action
+        y_output_rtn[i, :] = reward_sum
+        
+        if i % 10 == 0:
+            print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
+        
+        if terminated or truncated: 
+            observation, info = env_arg.reset()
+            if  frame >= 3 and terminated:
+                y_output_rtn[i, :] = -15
+                y_output_rtn[i-1, :] = -10
+                y_output_rtn[i-2, :] = -5
+
+            frame = 0
+            reward_sum = 0
 
 
 def create_model():
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(keras.Input(shape=(5)))
     model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
@@ -124,7 +199,7 @@ def create_model():
 
 def create_model_sigmoid():
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(keras.Input(shape=(5)))
     model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
@@ -134,7 +209,7 @@ def create_model_sigmoid():
 
 def create_model_relu():
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(9,)))
+    model_rtn.add(keras.Input(shape=(5)))
     model_rtn.add(Dense(128, activation='relu'))
     model_rtn.add(Dense(64, activation='relu'))
     model_rtn.add(Dense(1, activation='relu'))
@@ -143,7 +218,12 @@ def create_model_relu():
     return model_rtn
 
 def learning_model(model_arg, x_input_arg, y_output_arg):
-    model_arg.fit(x_input_arg, y_output_arg, batch_size=50, epochs = 5)
+    model_arg.fit(x_input_arg, y_output_arg, batch_size=100, epochs = 5)
+
+
+def learning_model_batch_10(model_arg, x_input_arg, y_output_arg):
+    model_arg.fit(x_input_arg, y_output_arg, batch_size=10, epochs = 5)
+
 
 def perdict_model(model_arg, observation_arg, action_sapce_arg):
     # it retruns action values at observation
@@ -162,8 +242,8 @@ def perdict_model(model_arg, observation_arg, action_sapce_arg):
         # print("================")
         # print(observation_arg)
         # print(action)
-        model_input[0, 0:8] = observation_arg  # 0~7번 인덱스
-        model_input[0, 8] = action             #8번 인덱스
+        model_input[0, 0:4] = observation_arg  # 0~3번 인덱스
+        model_input[0, 4] = action             #4번 인덱스
         # print(model_input)
         # print(model_input.shape)
         
@@ -172,6 +252,13 @@ def perdict_model(model_arg, observation_arg, action_sapce_arg):
     return action_value_rtn
 
 def pick_action(model_arg, observation_arg, action_sapce_arg):
+    action_value = perdict_model(model_arg, observation_arg, action_sapce_arg)
+    action_index = action_value.argmax()
+    action_pick = action_sapce_arg[action_index]
+
+    return action_pick
+
+def pick_action_verbose(model_arg, observation_arg, action_sapce_arg):
     action_value = perdict_model(model_arg, observation_arg, action_sapce_arg)
     action_index = action_value.argmax()
     action_pick = action_sapce_arg[action_index]
@@ -187,30 +274,36 @@ def pick_action(model_arg, observation_arg, action_sapce_arg):
     return action_pick
 
 if __name__ == '__main__':
-    # env = gym.make("LunarLander-v2", render_mode="human")
-    env = gym.make("LunarLander-v2")
+    # env = gym.make("CartPole-v1", render_mode="human")
+    env =  gym.make ("CartPole-v1")
 
-    num_of_frame = 100000
+    num_of_frame = 200000
+    action_space = np.array([0, 1])
+    model_glb = create_model_relu()
+
+    #initial random drive
     x_input, y_output = drive_env_random(env, num_of_frame)
-
-    env.close()
-
-    print(x_input.shape)
-    print(y_output.shape)
-
-    model_glb = create_model()
     learning_model(model_glb, x_input, y_output)
     
-    # test_obs = np.array([ 0.84823453  0.26283216  1.11286175 -1.18096614 -0.27859148 -0.07228909,  0.          0.          0.        ])
-    test_obs = np.array([0.84823453, 0.26283216, 0, 0, 0, 0, 0, 1])
+    #incremental MC 
+    num_of_frame = 100000
+    iter = 10
+    env_screen = gym.make("CartPole-v1", render_mode="human")
+    for i in range(iter):
+        # print("{}/{}======================================".format(i, iter))
+        
+        if(i%2 == 0):
+            x_input, y_output = drive_env_by_model(env_screen, 500, model_glb, action_space)
+            print("{}/{}======================================".format(i, iter))
+            learning_model_batch_10(model_glb, x_input, y_output)
+        else:
+            x_input, y_output = drive_env_random(env, num_of_frame)
+            print("{}/{}======================================".format(i, iter))
+            learning_model(model_glb, x_input, y_output)
 
-    model_glb.summary()
-    # keras.utils.plot_model(model_glb, "my_first_model_with_shape_info.png", show_shapes=True)
-
-
-    action_space = np.array([0, 1, 2, 3])
-    action_value = perdict_model(model_glb, test_obs, action_space)
-    
-    env = gym.make("LunarLander-v2", render_mode="human")
-    drive_env_by_model(env, 500, model_glb, action_space)
+    env = gym.make("CartPole-v1", render_mode="human")
+    num_of_frame = 100000
+    x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb, action_space)
+    # learning_model_batch_10(model_glb, x_input, y_output)
+    env_screen.close()
     env.close()
