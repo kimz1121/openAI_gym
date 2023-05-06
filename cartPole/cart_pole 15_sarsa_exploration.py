@@ -335,7 +335,7 @@ if __name__ == '__main__':
     print(env.observation_space._shape[0])
     print(type(env.observation_space._shape[0]))
 
-    num_of_frame = 1000
+    num_of_frame = 10
     model_glb = create_model_sigmoid(env)
 
     #initial random drive
@@ -349,18 +349,18 @@ if __name__ == '__main__':
     for i in range(iter):
     #     print("{}/{}======================================".format(i, iter))
         
-        # if(i%2 == 0):
-        #     x_input, y_output = drive_env_by_model(env_screen, 500, model_glb, action_space)
-        #     print("{}/{}======================================".format(i, iter))
-        #     learning_model_batch_10(model_glb, x_input, y_output)
-        # else:
-        #     x_input, y_output = drive_env_random(env, num_of_frame)
-        #     print("{}/{}======================================".format(i, iter))
-        #     learning_model(model_glb, x_input, y_output)
+        if(i%2 == 0):
+            x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
+            print("{}/{}======================================".format(i, iter))
+            learning_model_batch_10(model_glb, x_input, y_output)
+        else:
+            x_input, y_output = drive_env_random(env_screen, num_of_frame, model_glb)
+            print("{}/{}======================================".format(i, iter))
+            learning_model(model_glb, x_input, y_output)
 
-        x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
-        print("{}/{}======================================".format(i, iter))
-        learning_model_batch_10(model_glb, x_input, y_output)
+        # x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
+        # print("{}/{}======================================".format(i, iter))
+        # learning_model_batch_10(model_glb, x_input, y_output)
 
     num_of_frame = 100000
     x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
