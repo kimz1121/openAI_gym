@@ -77,92 +77,147 @@ from keras.optimizers   import Adam
 
 """
 
-def drive_env_random(env_arg, num_of_frame_arg):
+def drive_env_random(env_arg, num_of_frame_arg, model_arg):
+    observation, info = env_arg.reset()
 
-    observation, info = env_arg.reset()# 초기 상태에 관한 정보.
-
+    # check action and observation space size
     action_sapce_size = env_arg.env.action_space.n
     action_sapce = np.array(range(action_sapce_size))
-
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
-    print("action_sapce==================")
-    print(action_sapce)
+    # create data space 
+    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
+    y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
-    x_input_rtn = np.empty((num_of_frame_arg, observation_sapce_size+1))
-    y_output_rtn = np.empty((num_of_frame_arg, 1))
-
+    #define temporal parameters
     reward_sum = 0
-    frame_set =0
     frame = 0
-    eta = 0.1
+    frame_set = 0
+    
+    #define hyper parameters
+    gamma = 0.9#Q value discount
+    alpha = 0.7#Q_function update ratio
+    
+    mode = 1 # 0 : SARSA, 1 : Q_learning
+
+    # pick initial action
+    action_value_all = perdict_model(model_arg, observation, action_sapce)
+    action_index = action_value_all.argmax()
+    action_pick = env_arg.action_space.sample()
+    
     for i in range(num_of_frame_arg):
         frame += 1
-        action = env_arg.action_space.sample()  # agent policy that uses the observation and info
-        observation, reward, terminated, truncated, info = env_arg.step(action)
-        reward_sum += reward
-        # reward는 프래임 단위로 주어진다.
-        # 한 프래임의 action에 대하여 하나의 reward를 주는 방식. 
 
-        # print(action)
-        # print(type(action))
-        # print(observation.shape)
+        observation, reward, terminated, truncated, info = env_arg.step(action_pick)
+        
+        #pick next state and action ; which will be used in next iteration 
+        action_value_all = perdict_model(model_arg, observation, action_sapce)
+        action_index = action_value_all.argmax()
+        action_pick = env_arg.action_space.sample()
+        # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
 
+        if mode == 0:
+            action_value = action_value_all.mean()#SARSA mode
+        else : 
+            action_value = action_value_all[action_index]# Q_learning mode
+
+        # if(reward_sum < 10):#reward seturation
+        #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
-        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action
-        y_output_rtn[i, :] = reward_sum
-        # print(reward)
-        # print(type(reward))
+        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
+        
+        if terminated or truncated:
+            if terminated == 1:
+                reward = -100
+            Q_target = reward
 
-        if terminated or truncated: 
             observation, info = env_arg.reset()
-            y_output_rtn[frame_set:i, :] = reward_sum
-
             frame_set = i
             frame = 0
             reward_sum = 0
 
-
+        else:
+            Q_target = reward + gamma*action_value
+        
+        # print("=================")
+        # print(Q_target)
+        # print(y_output_rtn[i, :])
+        y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
+        # print(y_output_rtn[i, :])
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
     return x_input_rtn, y_output_rtn
 
 
+
 def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     observation, info = env_arg.reset()
 
+    # check action and observation space size
     action_sapce_size = env_arg.env.action_space.n
     action_sapce = np.array(range(action_sapce_size))
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
-    x_input_rtn = np.empty((num_of_frame_arg, observation_sapce_size+1))
-    y_output_rtn = np.empty((num_of_frame_arg, 1))
+    # create data space 
+    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
+    y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
+    #define temporal parameters
     reward_sum = 0
     frame = 0
     frame_set = 0
-    eta = 0.2
+    
+    #define hyper parameters
+    gamma = 0.9#Q value discount
+    alpha = 0.7#Q_function update ratio
+    
+    mode = 1 # 0 : SARSA, 1 : Q_learning
+
+    # pick initial action
+    action_value_all = perdict_model(model_arg, observation, action_sapce)
+    action_index = action_value_all.argmax()
+    action_pick = action_sapce[action_index]
+    
     for i in range(num_of_frame_arg):
         frame += 1
-        action = pick_action(model_arg, observation, action_sapce)
-        # print("=================")
-        # print(type(action))
-        # print(action)
-        observation, reward, terminated, truncated, info = env_arg.step(action)
+
+        observation, reward, terminated, truncated, info = env_arg.step(action_pick)
         
-        reward_sum += reward
+        #pick next state and action ; which will be used in next iteration 
+        action_value_all = perdict_model(model_arg, observation, action_sapce)
+        # print("=======================")
+        # print(action_sapce)
+        # print(action_value_all)
+        action_index = action_value_all.argmax()
+        action_pick = action_sapce[action_index]
+        # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
+
+        if mode == 0:
+            action_value = action_value_all.mean()#SARSA mode
+        else : 
+            action_value = action_value_all[action_index]# Q_learning mode
+
+        # if(reward_sum < 10):#reward seturation
+        #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
-        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action
-        y_output_rtn[i, :] = reward_sum
+        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
         if terminated or truncated: 
-            observation, info = env_arg.reset()
-            y_output_rtn[frame_set:i, :] = reward_sum
+            if terminated == 1:
+                reward = -100
+            Q_target = reward
 
+            observation, info = env_arg.reset()
             frame_set = i
             frame = 0
             reward_sum = 0
+
+        else:
+            Q_target = reward + gamma*action_value
+
+        # print(Q_target)
+        y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
 
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
@@ -176,8 +231,9 @@ def create_model(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(128, activation='sigmoid'))
-    model_rtn.add(Dense(64, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
     model_rtn.compile(loss='mse', optimizer=Adam())
     
@@ -188,8 +244,9 @@ def create_model_sigmoid(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(128, activation='sigmoid'))
-    model_rtn.add(Dense(64, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(16, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
     model_rtn.compile(loss='mse', optimizer=Adam())
     
@@ -200,7 +257,7 @@ def create_model_relu(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(128, activation='relu'))
+    model_rtn.add(Dense(64, activation='relu'))
     model_rtn.add(Dense(64, activation='relu'))
     model_rtn.add(Dense(1, activation='relu'))
     model_rtn.compile(loss='mse', optimizer=Adam())
@@ -278,18 +335,18 @@ if __name__ == '__main__':
     print(env.observation_space._shape[0])
     print(type(env.observation_space._shape[0]))
 
-    num_of_frame = 1000000
-    model_glb = create_model_relu(env)
+    num_of_frame = 1000
+    model_glb = create_model_sigmoid(env)
 
     #initial random drive
-    x_input, y_output = drive_env_random(env, num_of_frame)
+    x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
     learning_model(model_glb, x_input, y_output)
     
     env_screen = gym.make("CartPole-v1", render_mode="human")
     #incremental MC 
-    # num_of_frame = 10000
-    # iter = 10
-    # for i in range(iter):
+    num_of_frame = 500
+    iter = 1000
+    for i in range(iter):
     #     print("{}/{}======================================".format(i, iter))
         
         # if(i%2 == 0):
@@ -301,9 +358,9 @@ if __name__ == '__main__':
         #     print("{}/{}======================================".format(i, iter))
         #     learning_model(model_glb, x_input, y_output)
 
-        # x_input, y_output = drive_env_by_model(env_screen, 500, model_glb)
-        # print("{}/{}======================================".format(i, iter))
-        # learning_model_batch_10(model_glb, x_input, y_output)
+        x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
+        print("{}/{}======================================".format(i, iter))
+        learning_model_batch_10(model_glb, x_input, y_output)
 
     num_of_frame = 100000
     x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)

@@ -77,56 +77,58 @@ from keras.optimizers   import Adam
 
 """
 
-def drive_env_random(env_arg, num_of_frame_arg):
-
-    observation, info = env_arg.reset()# 초기 상태에 관한 정보.
+def drive_env_random(env_arg, num_of_frame_arg, model_arg):
+    observation, info = env_arg.reset()
 
     action_sapce_size = env_arg.env.action_space.n
     action_sapce = np.array(range(action_sapce_size))
-
     observation_sapce_size = env_arg.env.observation_space._shape[0]
-
-    print("action_sapce==================")
-    print(action_sapce)
 
     x_input_rtn = np.empty((num_of_frame_arg, observation_sapce_size+1))
     y_output_rtn = np.empty((num_of_frame_arg, 1))
 
     reward_sum = 0
-    frame_set =0
     frame = 0
-    eta = 0.1
+    frame_set = 0
+    gamma = 0.9#Q value discount
+    alpha = 0.9#Q_function update ratio
     for i in range(num_of_frame_arg):
         frame += 1
+
         action = env_arg.action_space.sample()  # agent policy that uses the observation and info
+
+
+        # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
+
         observation, reward, terminated, truncated, info = env_arg.step(action)
-        reward_sum += reward
-        # reward는 프래임 단위로 주어진다.
-        # 한 프래임의 action에 대하여 하나의 reward를 주는 방식. 
 
-        # print(action)
-        # print(type(action))
-        # print(observation.shape)
+        action_value = perdict_model(model_arg, observation, action_sapce)
+        action_index = action_value.argmax()
+        action_pick = action_sapce[action_index]
 
+        # if(reward_sum < 10):#reward seturation
+        #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action
-        y_output_rtn[i, :] = reward_sum
-        # print(reward)
-        # print(type(reward))
-
+        
         if terminated or truncated: 
-            observation, info = env_arg.reset()
-            y_output_rtn[frame_set:i, :] = reward_sum
+            Q_target = reward
 
+            observation, info = env_arg.reset()
             frame_set = i
             frame = 0
             reward_sum = 0
 
+        else:
+            Q_target = reward + gamma*action_value[action_index]
+
+        y_output_rtn[frame_set:i, :] = alpha*y_output_rtn[frame_set:i, :] + (1-alpha)*Q_target
 
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
     return x_input_rtn, y_output_rtn
+
 
 
 def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
@@ -142,27 +144,35 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     reward_sum = 0
     frame = 0
     frame_set = 0
-    eta = 0.2
+    gamma = 0.9#Q value discount
+    alpha = 0.9#Q_function update ratio
     for i in range(num_of_frame_arg):
         frame += 1
-        action = pick_action(model_arg, observation, action_sapce)
-        # print("=================")
-        # print(type(action))
-        # print(action)
-        observation, reward, terminated, truncated, info = env_arg.step(action)
+
+        action_value = perdict_model(model_arg, observation, action_sapce)
+        action_index = action_value.argmax()
+        action_pick = action_sapce[action_index]
+        # action_value 중 최대 값을 선택하면 Q-learnig
+
+        observation, reward, terminated, truncated, info = env_arg.step(action_pick)
         
-        reward_sum += reward
+        # if(reward_sum < 10):#reward seturation
+        #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
-        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action
-        y_output_rtn[i, :] = reward_sum
+        x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
         if terminated or truncated: 
-            observation, info = env_arg.reset()
-            y_output_rtn[frame_set:i, :] = reward_sum
+            Q_target = reward
 
+            observation, info = env_arg.reset()
             frame_set = i
             frame = 0
             reward_sum = 0
+
+        else:
+            Q_target = reward + gamma*action_value[action_index]
+
+        y_output_rtn[frame_set:i, :] = alpha*y_output_rtn[frame_set:i, :] + (1-alpha)*Q_target
 
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
