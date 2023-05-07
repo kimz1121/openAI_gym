@@ -89,7 +89,7 @@ class Agent:
 
         action_t0 = self.pick_action(observation, epsilon=epsilon_arg)
 
-        Q_value_0 = self.get_Q_value(observation, action_t0)
+        
         # sarsa hyper parameter
         gamma = 0.99
         alpha = 0.7
@@ -97,24 +97,22 @@ class Agent:
         iter_limit = 100000
         i = 0
         while 1:
+            Q_value_0 = self.get_Q_value(observation, action_t0)
             observation, reward, terminated, turncated, info = self.env.step(action_t0)
 
-            action_t1 = self.pick_action(observation, epsilon=epsilon_arg)
+            # action_t1 = self.pick_action(observation, epsilon=epsilon_arg)
 
-            Q_value_1 = self.get_Q_value(observation, action_t1)
-
-            print(Q_value_0)
+            Q_value_1 = self.get_Q_value_all(observation)
+            Q_value_1_mean = Q_value_1.mean()
             # clac Q_value target
             if terminated or turncated or (reward == -100):
                 target = reward
             else:
-                target = reward + gamma*Q_value_0
+                target = reward + gamma*Q_value_1_mean
 
             # update Q_value
-            target = (1-alpha)*Q_value_0 + alpha*Q_value_1
+            target = (1-alpha)*Q_value_0 + alpha*target
             self.put_Q_value(observation, action_t0, target)
-
-            action_t0 = action_t1
 
             if reward == -100:
                 break
@@ -143,8 +141,7 @@ class Agent:
         for i in range(4):
             ation_value_temp[i] = self.get_Q_value(observation_arg, i)
         return ation_value_temp
-    
-    
+
     def put_Q_value(self, observation_arg, action_arg, value_arg):
         position_x, position_y = self.get_observation_to_xy(observation_arg)    
         self.Q_table[position_x, position_y, action_arg] = value_arg
