@@ -89,7 +89,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
     # create data space 
-    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size*2+1))
+    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
     y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
     #define temporal parameters
@@ -104,22 +104,19 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
-    action_value_all = perdict_model(model_arg, observation, observation, action_sapce)
+    action_value_all = perdict_model(model_arg, observation, action_sapce)
     action_index = action_value_all.argmax()
     action_pick = env_arg.action_space.sample()
     
     for i in range(num_of_frame_arg):
         frame += 1
-        observation_log = observation
+
         observation, reward, terminated, truncated, info = env_arg.step(action_pick)
         
         #pick next state and action ; which will be used in next iteration 
-        action_value_all = perdict_model(model_arg, observation_log, observation, action_sapce)
-        # print("=======================")
-        # print(action_sapce)
-        # print(action_value_all)
+        action_value_all = perdict_model(model_arg, observation, action_sapce)
         action_index = action_value_all.argmax()
-        action_pick = action_sapce[action_index]
+        action_pick = env_arg.action_space.sample()
         # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
 
         if mode == 0:
@@ -129,11 +126,10 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
 
         # if(reward_sum < 10):#reward seturation
         #     reward_sum += reward
-        x_input_rtn[i, 0:observation_sapce_size] = observation_log[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
-        x_input_rtn[i, observation_sapce_size:observation_sapce_size*2] = observation[:]
+        x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
-        if terminated or truncated: 
+        if terminated or truncated:
             if terminated == 1:
                 reward = -100
             Q_target = reward
@@ -145,15 +141,18 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
 
         else:
             Q_target = reward + gamma*action_value
-
+        
+        # print("=================")
         # print(Q_target)
+        # print(y_output_rtn[i, :])
         y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
-
+        # print(y_output_rtn[i, :])
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
         if terminated == 1:
             break
+
     return x_input_rtn, y_output_rtn
 
 
@@ -167,7 +166,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
     # create data space 
-    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size*2+1))
+    x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
     y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
     #define temporal parameters
@@ -182,17 +181,17 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
-    action_value_all = perdict_model(model_arg, observation, observation, action_sapce)
+    action_value_all = perdict_model(model_arg, observation, action_sapce)
     action_index = action_value_all.argmax()
     action_pick = action_sapce[action_index]
     
     for i in range(num_of_frame_arg):
         frame += 1
-        observation_log = observation
+
         observation, reward, terminated, truncated, info = env_arg.step(action_pick)
         
         #pick next state and action ; which will be used in next iteration 
-        action_value_all = perdict_model(model_arg, observation_log, observation, action_sapce)
+        action_value_all = perdict_model(model_arg, observation, action_sapce)
         # print("=======================")
         # print(action_sapce)
         # print(action_value_all)
@@ -207,8 +206,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
 
         # if(reward_sum < 10):#reward seturation
         #     reward_sum += reward
-        x_input_rtn[i, 0:observation_sapce_size] = observation_log[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
-        x_input_rtn[i, observation_sapce_size:observation_sapce_size*2] = observation[:]
+        x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
         if terminated or truncated: 
@@ -240,7 +238,7 @@ def create_model(env_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(observation_sapce_size*2+1)))
+    model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
     model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(16, activation='sigmoid'))
@@ -253,7 +251,7 @@ def create_model_sigmoid(env_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(observation_sapce_size*2+1)))
+    model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
     model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(16, activation='sigmoid'))
@@ -266,7 +264,7 @@ def create_model_relu(env_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
 
     model_rtn = Sequential()
-    model_rtn.add(keras.Input(shape=(observation_sapce_size*2+1)))
+    model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
     model_rtn.add(Dense(64, activation='relu'))
     model_rtn.add(Dense(64, activation='relu'))
     model_rtn.add(Dense(1, activation='relu'))
@@ -282,7 +280,7 @@ def learning_model_batch_10(model_arg, x_input_arg, y_output_arg):
     model_arg.fit(x_input_arg, y_output_arg, batch_size=10, epochs = 2)
 
 
-def perdict_model(model_arg, observation_log_arg, observation_arg, action_sapce_arg):
+def perdict_model(model_arg, observation_arg, action_sapce_arg):
     # it retruns action values at observation
     # model_arg : keras model
     # observation_arg : np.array (1, 8)
@@ -292,8 +290,7 @@ def perdict_model(model_arg, observation_log_arg, observation_arg, action_sapce_
     observation_space_size = observation_arg.shape[0]
 
     action_value_rtn = np.empty((action_space_size))
-
-    model_input = np.empty((1, observation_space_size*2 + 1))
+    model_input = np.empty((1, observation_space_size + 1))
     
     # print(model_input.shape)
     for i in range(action_space_size):#action_space_arg의 열길이에 따라 평가를 반복
@@ -301,9 +298,7 @@ def perdict_model(model_arg, observation_log_arg, observation_arg, action_sapce_
         # print("================")
         # print(observation_arg)
         # print(action)
-        model_input[0, 0:observation_space_size] = observation_log_arg  # 0~3번 인덱스
-        model_input[0, observation_space_size:observation_space_size*2] = observation_arg  # 0~3번 인덱스
-
+        model_input[0, 0:observation_space_size] = observation_arg  # 0~3번 인덱스
         model_input[0, observation_space_size:observation_space_size+1] = action             #4번 인덱스
         # print(model_input)
         # print(model_input.shape)
@@ -336,7 +331,7 @@ def pick_action_verbose(model_arg, observation_arg, action_sapce_arg):
 
 if __name__ == '__main__':
     # env = gym.make("CartPole-v1", render_mode="human")
-    env =  gym.make ("CartPole-v1")
+    env =  gym.make ("CliffWalking-v0")
 
     print("================")
     print(env.action_space)
@@ -348,15 +343,15 @@ if __name__ == '__main__':
     print(env.observation_space._shape[0])
     print(type(env.observation_space._shape[0]))
 
-    num_of_frame = 10
+    num_of_frame = 100
     model_glb = create_model_sigmoid(env)
 
     #initial random drive
-    for i in range(num_of_frame):
+    for i in range(1000):
         x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
         learning_model(model_glb, x_input, y_output)
     
-    env_screen = gym.make("CartPole-v1", render_mode="human")
+    env_screen = gym.make("CliffWalking-v0", render_mode="human")
     #incremental MC 
     num_of_frame = 1000
     iter = 1000
