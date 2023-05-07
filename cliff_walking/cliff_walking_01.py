@@ -106,12 +106,12 @@ class Agent:
             print(Q_value_0)
             # clac Q_value target
             if terminated or turncated or (reward == -100):
-                target = reward
+                Q_value_bellman = reward
             else:
-                target = reward + gamma*Q_value_0
+                Q_value_bellman = reward + gamma*Q_value_1
 
             # update Q_value
-            target = (1-alpha)*Q_value_0 + alpha*Q_value_1
+            target = (1-alpha)*Q_value_0 + alpha*Q_value_bellman
             self.put_Q_value(observation, action_t0, target)
 
             action_t0 = action_t1
