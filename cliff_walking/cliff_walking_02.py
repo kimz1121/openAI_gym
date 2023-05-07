@@ -23,40 +23,6 @@ def env_drive_by_key(env_arg):
         if terminated == 1:
             break
 
-def get_keyboard_input():
-    key_input = -1
-    # while 1:
-    #     if keyboard.is_pressed("up") == 1:
-    #         key_input = 0
-    #     if keyboard.is_pressed("right") == 1:
-    #         key_input = 1
-    #     if keyboard.is_pressed("down") == 1:
-    #         key_input = 2
-    #     if keyboard.is_pressed("left") == 1:
-    #         key_input = 3
-
-    #     if keyboard.is_pressed("x") == 1:
-    #         key_input = 4
-    #     if keyboard.is_pressed("X") == 1:
-    #         key_input = 4
-    #     if keyboard.is_pressed("esc") == 1:
-    #         key_input = 4
-
-        # if key_input != -1: 
-        #     break
-
-    key_value = input()
-    if key_value == "1":
-        key_input = 0
-    elif key_value == "4":
-        key_input = 1
-    elif key_value == "2":
-        key_input = 2
-    elif key_value == "3":
-        key_input = 3
-
-
-    return key_input
 
 # 0: LEFT
 # 1: DOWN
@@ -91,8 +57,8 @@ class Agent:
 
         
         # sarsa hyper parameter
-        gamma = 0.99
-        alpha = 0.7
+        gamma = 0.7
+        alpha = 1
 
         iter_limit = 100000
         i = 0
@@ -100,22 +66,20 @@ class Agent:
             Q_value_0 = self.get_Q_value(observation, action_t0)
             observation, reward, terminated, turncated, info = self.env.step(action_t0)
 
-            # action_t1 = self.pick_action(observation, epsilon=epsilon_arg)
-
+            action_t1 = self.pick_action(observation, epsilon=epsilon_arg)
+            action_t0 = action_t1 
+            
             Q_value_1 = self.get_Q_value_all(observation)
             Q_value_1_mean = Q_value_1.mean()
             # clac Q_value target
-            if terminated or turncated or (reward == -100):
-                target = reward
+            if terminated or turncated:
+                Q_value_bellman = reward
             else:
-                target = reward + gamma*Q_value_1_mean
+                Q_value_bellman = reward + gamma*Q_value_1_mean
 
             # update Q_value
-            target = (1-alpha)*Q_value_0 + alpha*target
+            target = (1-alpha)*Q_value_0 + alpha*Q_value_bellman
             self.put_Q_value(observation, action_t0, target)
-
-            if reward == -100:
-                break
             
             if terminated or turncated:
                 break
@@ -125,8 +89,31 @@ class Agent:
         
             i = i+1
 
+        print("total steps : {}".format(i))
+
         return
     
+    def drive_by_key(self):
+        
+        observation, info = self.env.reset()
+        while 1:
+            Q_value = self.get_Q_value_all(observation)
+            x, y = self.get_observation_to_xy(observation)
+            print(x, y)
+            print(Q_value)
+
+            print("11111111111111111")
+            action = self.get_keyboard_input()
+            print(action)
+            print("22222222222222222")
+            if action == -1:
+                break
+
+            observation, reward, terminated, turncated, info = self.env.step(action)
+            print(reward)
+
+
+
     def get_observation_to_xy(self, observation_arg):
         position_x = int(observation_arg%12)
         position_y = int(3-(observation_arg-observation_arg%12)/12)
@@ -164,11 +151,11 @@ class Agent:
         # print(action)
 
         if np.random.rand() < epsilon:
-            print("epslion_action")
+            # print("epslion_action")
             action_probability = action_mask/(action_mask.sum())
             action = np.random.choice(action_space, 1, p=action_probability)[0]#return type : int
         else:
-            print("greedy_action")
+            # print("greedy_action")
             ation_value_tabel = []
 
             max_value_temp = 0
@@ -185,14 +172,18 @@ class Agent:
                         if ation_value_all[i] > max_value_temp:
                             max_value_temp = ation_value_all[i]
                             max_index_temp = i
+                        elif ation_value_all[i] == max_value_temp:
+                            index = np.random.choice([max_index_temp, i], 1)[0]# to int
+                            max_value_temp = ation_value_all[index]
+                            max_index_temp = index
 
-            if max_value_temp == -1:
+            if max_index_temp == -1:
                 assert 0, "action mask error : all masks are 0"
 
             action_index = max_index_temp
             action = action_index
         
-
+            # print("--------------")
 
         return action
 
@@ -210,7 +201,32 @@ class Agent:
 
         return action_mask
 
+    def get_keyboard_input(self):
+        key_input = -1
 
+        key_value = input()
+        # if key_value == "1":
+        #     key_input = 0
+        # elif key_value == "4":
+        #     key_input = 1
+        # elif key_value == "2":
+        #     key_input = 2
+        # elif key_value == "3":
+        #     key_input = 3
+        print(key_value)
+        if key_value == "0":
+            key_input = 0
+        elif key_value == "1":
+            key_input = 1
+        elif key_value == "2":
+            key_input = 2
+        elif key_value == "3":
+            key_input = 3
+
+        # if key_input == -1:
+        #     assert key_input==-1 , "wrong key input"
+
+        return key_input
 
 
 if __name__ == "__main__":
@@ -222,8 +238,7 @@ if __name__ == "__main__":
     # env_drive_by_key(env)
     
     agent = Agent()
-    # agent.put_gym_env(env_headless)
-    agent.put_gym_env(env_screen)
+    # agent.put_gym_env(env_screen)
 
     # agent.put_Q_value(36, 0, 10)
     # agent.put_Q_value(36, 1, 100)
@@ -241,16 +256,32 @@ if __name__ == "__main__":
     # print(agent.pick_action(36, 1))
     # print(agent.pick_action(36, 1))
 
+    agent.put_gym_env(env_headless)
     agent.drive_sarsa_tabel(1)
-    for i in range(100):
-        agent.drive_sarsa_tabel(0.2)
-    
-    agent.put_gym_env(env_screen)
-    agent.drive_sarsa_tabel(0.2)
-    agent.drive_sarsa_tabel(0.1)
-    agent.drive_sarsa_tabel(0.05)
-    agent.drive_sarsa_tabel(0)
+    for i in range(10):
+        print("generation : {}".format(i))
+        agent.drive_sarsa_tabel(0.1)
 
+    agent.put_gym_env(env_screen)
+    # for i in range(1):
+    #     agent.drive_sarsa_tabel(1)
+
+    time.sleep(3)
+
+    # agent.put_gym_env(env_headless)
+    # agent.drive_sarsa_tabel(1)
+    # for i in range(1000):
+    #     agent.drive_sarsa_tabel(0.3)
+    
+    # agent.put_gym_env(env_screen)
+    # for i in range(10):
+    #     agent.drive_sarsa_tabel(0.1)
+
+
+    print("++++++++++++++++++++++++")
+    
+    for i in range(1000):
+        agent.drive_by_key()
     print("++++++++++++++++++++++++")
     observation_arg = 36
     print(agent.get_observation_to_xy(observation_arg))

@@ -46,9 +46,9 @@ def get_keyboard_input():
         #     break
 
     key_value = input()
-    if key_value == "1":
+    if key_value == "0":
         key_input = 0
-    elif key_value == "4":
+    elif key_value == "1":
         key_input = 1
     elif key_value == "2":
         key_input = 2
@@ -68,6 +68,8 @@ if __name__ == "__main__":
     env = gym.make("CliffWalking-v0", render_mode="human")
 
 
+    env.reset()
+    time.sleep(3)
 
     env_drive_by_key(env)
 
