@@ -98,10 +98,10 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
     frame_set = 0
     
     #define hyper parameters
-    gamma = 0.99#Q value discount
-    alpha = 0#Q_function update ratio
+    gamma = 0.9#Q value discount
+    alpha = 0.7#Q_function update ratio
     
-    mode = 1 # 0 : SARSA, 1 : Q_learning
+    mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
     action_value_all = perdict_model(model_arg, observation, action_sapce)
@@ -130,8 +130,8 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
         if terminated or truncated:
-            # if terminated == 1:
-            #     reward = -100
+            if terminated == 1:
+                reward = -100
             Q_target = reward
 
             observation, info = env_arg.reset()
@@ -142,9 +142,9 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         else:
             Q_target = reward + gamma*action_value
         
-        print("=================")
-        print(Q_target)
-        print(y_output_rtn[i, :])
+        # print("=================")
+        # print(Q_target)
+        # print(y_output_rtn[i, :])
         y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
         # print(y_output_rtn[i, :])
         if i % 10 == 0:
@@ -175,10 +175,10 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     frame_set = 0
     
     #define hyper parameters
-    gamma = 0.99#Q value discount
-    alpha = 0#Q_function update ratio
+    gamma = 0.9#Q value discount
+    alpha = 0.7#Q_function update ratio
     
-    mode = 1 # 0 : SARSA, 1 : Q_learning
+    mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
     action_value_all = perdict_model(model_arg, observation, action_sapce)
@@ -210,8 +210,8 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         
         if terminated or truncated: 
-            # if terminated == 1:
-            #     reward = -100
+            if terminated == 1:
+                reward = -100
             Q_target = reward
 
             observation, info = env_arg.reset()
@@ -221,10 +221,8 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
 
         else:
             Q_target = reward + gamma*action_value
-        
-        print("=================")
-        print(Q_target)
-        print(y_output_rtn[i, :])
+
+        # print(Q_target)
         y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
 
         if i % 10 == 0:
@@ -241,8 +239,8 @@ def create_model(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(16, activation='sigmoid'))
-    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(128, activation='sigmoid'))
+    model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(16, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
     model_rtn.compile(loss='mse', optimizer=Adam())
@@ -254,8 +252,8 @@ def create_model_sigmoid(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(16, activation='sigmoid'))
-    model_rtn.add(Dense(16, activation='sigmoid'))
+    model_rtn.add(Dense(128, activation='sigmoid'))
+    model_rtn.add(Dense(64, activation='sigmoid'))
     model_rtn.add(Dense(16, activation='sigmoid'))
     model_rtn.add(Dense(1, activation='sigmoid'))
     model_rtn.compile(loss='mse', optimizer=Adam())
@@ -332,10 +330,8 @@ def pick_action_verbose(model_arg, observation_arg, action_sapce_arg):
     return action_pick
 
 if __name__ == '__main__':
-    
-    # env = gym.make("LunarLander-v2", render_mode="human")
-    env_screen = gym.make("LunarLander-v2", render_mode="human")
-    env =  gym.make ("LunarLander-v2")
+    # env = gym.make("CartPole-v1", render_mode="human")
+    env =  gym.make ("CartPole-v1")
 
     print("================")
     print(env.action_space)
@@ -347,16 +343,15 @@ if __name__ == '__main__':
     print(env.observation_space._shape[0])
     print(type(env.observation_space._shape[0]))
 
-    num_of_frame = 1000
+    num_of_frame = 100
     model_glb = create_model_sigmoid(env)
 
     #initial random drive
-    iter = 1000
-    for i in range(iter):
-        print("{}/{}======================================".format(i, iter))
+    for i in range(1000):
         x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
         learning_model(model_glb, x_input, y_output)
-        
+    
+    env_screen = gym.make("CartPole-v1", render_mode="human")
     #incremental MC 
     num_of_frame = 1000
     iter = 1000
@@ -364,7 +359,7 @@ if __name__ == '__main__':
     #     print("{}/{}======================================".format(i, iter))
         
         # if(i%2 == 0):
-        if(i % 2 == 0):
+        if(i % 5 == 0):
             x_input, y_output = drive_env_random(env_screen, num_of_frame, model_glb)
             print("{}/{}======================================".format(i, iter))
             learning_model_batch_10(model_glb, x_input, y_output)
