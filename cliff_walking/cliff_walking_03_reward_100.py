@@ -34,7 +34,7 @@ class Agent:
         
         # sarsa hyper parameter
         gamma = 0.9
-        alpha = 0.5
+        alpha = 0.8
 
         iter_limit = 100000
         i = 0
@@ -86,18 +86,18 @@ class Agent:
         ation_value_temp = np.empty(4)
         observation_t0, info = self.env.reset()
 
-        action = self.pick_action(observation_t0, epsilon=epsilon_arg)
+        action_t0 = self.pick_action(observation_t0, epsilon=epsilon_arg)
 
         
         # sarsa hyper parameter
         gamma = 0.9
-        alpha = 0.5
+        alpha = 0.8
 
-        iter_limit = 100000
+        iter_limit = 1000
         i = 0
         while 1:
-            Q_value_0 = self.get_Q_value(observation_t0, action)
-            observation_t1, reward, terminated, turncated, info = self.env.step(action)
+            Q_value_0 = self.get_Q_value(observation_t0, action_t0)
+            observation_t1, reward, terminated, turncated, info = self.env.step(action_t0)
 
             action_t1 = self.pick_action(observation_t1, epsilon=epsilon_arg)
 
@@ -122,7 +122,7 @@ class Agent:
 
             # update Q_value
             target = (1-alpha)*Q_value_0 + alpha*Q_value_bellman
-            self.put_Q_value(observation_t0, action, target)
+            self.put_Q_value(observation_t0, action_t0, target)
             
             action_t0 = action_t1
 
@@ -281,48 +281,16 @@ class Agent:
 if __name__ == "__main__":
     env_screen = gym.make("CliffWalking-v0", render_mode="human")
     env_headless = gym.make("CliffWalking-v0")
-
-
-    # env.reset()
-    # env_drive_by_key(env)
-    
     agent = Agent()
-    # agent.put_gym_env(env_screen)
-
-    # agent.put_Q_value(36, 0, 10)
-    # agent.put_Q_value(36, 1, 100)
-    # agent.put_Q_value(36, 2, -100)
-    # agent.put_Q_value(36, 3, -100)
-
-    # print(agent.get_Q_value(36, 0))
-    # print(agent.get_Q_value(36, 3))
-    
-    # print(agent.pick_action(36, 0))
-    # print(agent.pick_action(36, 0))
-    # print(agent.pick_action(36, 1))
-    # print(agent.pick_action(36, 1))
-    # print(agent.pick_action(36, 1))
-    # print(agent.pick_action(36, 1))
-    # print(agent.pick_action(36, 1))
 
     agent.put_gym_env(env_headless)
     agent.drive_sarsa_tabel(1)
-    for i in range(1000):
+    for i in range(100):
         print("generation : {}".format(i))
         agent.drive_sarsa_tabel(0.1)
-
-    agent.put_gym_env(env_screen)
-    # for i in range(1):
-    #     agent.drive_sarsa_tabel(1)
-
-
-    # agent.put_gym_env(env_headless)
-    # agent.drive_sarsa_tabel(1)
-    # for i in range(1000):
-    #     agent.drive_sarsa_tabel(0.3)
     
     agent.put_gym_env(env_screen)
-    for i in range(10):
+    for i in range(100):
         agent.drive_sarsa_tabel(0.1)
 
 
@@ -333,10 +301,6 @@ if __name__ == "__main__":
     for i in range(1000):
         agent.drive_by_key()
     print("++++++++++++++++++++++++")
-    observation_arg = 36
-    print(agent.get_observation_to_xy(observation_arg))
-    print(agent.get_action_mask(observation_arg))
-    print(agent.pick_action(observation_arg, 0))
 
     time.sleep(3)
 
