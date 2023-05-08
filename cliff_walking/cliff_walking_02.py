@@ -51,9 +51,9 @@ class Agent:
     
     def drive_sarsa_tabel(self, epsilon_arg):
         ation_value_temp = np.empty(4)
-        observation, info = self.env.reset()
+        observation_t0, info = self.env.reset()
 
-        action_t0 = self.pick_action(observation, epsilon=epsilon_arg)
+        action = self.pick_action(observation_t0, epsilon=epsilon_arg)
 
         
         # sarsa hyper parameter
@@ -63,24 +63,34 @@ class Agent:
         iter_limit = 100000
         i = 0
         while 1:
-            Q_value_0 = self.get_Q_value(observation, action_t0)
-            observation, reward, terminated, turncated, info = self.env.step(action_t0)
+            Q_value_0 = self.get_Q_value(observation_t0, action)
+            observation_t1, reward, terminated, turncated, info = self.env.step(action)
 
-            action_t1 = self.pick_action(observation, epsilon=epsilon_arg)
-            action_t0 = action_t1 
-            
-            Q_value_1 = self.get_Q_value_all(observation)
-            Q_value_1_mean = Q_value_1.mean()
+            Q_value_1 = self.get_Q_value_all(observation_t1)
+            Q_value_1_mean = float(Q_value_1.mean())
+
             # clac Q_value target
             if terminated or turncated:
                 Q_value_bellman = reward
             else:
                 Q_value_bellman = reward + gamma*Q_value_1_mean
 
+            # print("===========================")
+            # print(type(Q_value_1_mean))
+            # print(Q_value_1_mean)
+            # print(type(reward))
+            # print(reward)
+            # print(type(Q_value_bellman))
+            # print(Q_value_bellman)
+
             # update Q_value
             target = (1-alpha)*Q_value_0 + alpha*Q_value_bellman
-            self.put_Q_value(observation, action_t0, target)
+            self.put_Q_value(observation_t0, action, target)
             
+            action = self.pick_action(observation_t1, epsilon=epsilon_arg)
+
+            observation_t0 = observation_t1
+
             if terminated or turncated:
                 break
 
@@ -113,6 +123,8 @@ class Agent:
             print(reward)
 
 
+            if terminated or turncated:
+                self.env.reset()
 
     def get_observation_to_xy(self, observation_arg):
         position_x = int(observation_arg%12)
@@ -130,7 +142,7 @@ class Agent:
         return ation_value_temp
 
     def put_Q_value(self, observation_arg, action_arg, value_arg):
-        position_x, position_y = self.get_observation_to_xy(observation_arg)    
+        position_x, position_y = self.get_observation_to_xy(observation_arg)
         self.Q_table[position_x, position_y, action_arg] = value_arg
 
     
@@ -258,7 +270,7 @@ if __name__ == "__main__":
 
     agent.put_gym_env(env_headless)
     agent.drive_sarsa_tabel(1)
-    for i in range(10):
+    for i in range(100):
         print("generation : {}".format(i))
         agent.drive_sarsa_tabel(0.1)
 
