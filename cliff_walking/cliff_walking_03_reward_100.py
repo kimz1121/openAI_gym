@@ -291,7 +291,7 @@ if __name__ == "__main__":
     
     agent.put_gym_env(env_screen)
     for i in range(100):
-        agent.drive_sarsa_tabel(0.1)
+        agent.drive_sarsa_tabel(0)
 
 
 
