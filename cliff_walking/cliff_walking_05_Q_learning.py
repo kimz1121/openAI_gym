@@ -139,6 +139,66 @@ class Agent:
         print("total steps : {}".format(i))
 
         return
+    
+    def drive_Q_tabel(self, epsilon_arg):
+        ation_value_temp = np.empty(4)
+        observation_t0, info = self.env.reset()
+
+        action_t0 = self.pick_action(observation_t0, epsilon=epsilon_arg)
+
+        
+        # sarsa hyper parameter
+        gamma = 0.9
+        alpha = 0.8
+
+        iter_limit = 1000
+        i = 0
+        while 1:
+            Q_value_0 = self.get_Q_value(observation_t0, action_t0)
+            observation_t1, reward, terminated, turncated, info = self.env.step(action_t0)
+
+            action_t1 = self.pick_action(observation_t1, epsilon=epsilon_arg)
+
+            # Q_value_1 = self.get_Q_value(observation_t1, action_t1)
+            Q_value_1 = self.get_Q_value_all(observation_t1)
+            Q_value_1_max = float(Q_value_1.max())
+
+            # clac Q_value target
+            if terminated or turncated:
+                if terminated:
+                    reward = 1000
+                print("===========================")
+                print(reward)
+                Q_value_bellman = reward
+            else:
+                Q_value_bellman = reward + gamma*Q_value_1_max
+            
+            # print(type(Q_value_1_mean))
+            # print(Q_value_1_mean)
+            # print(type(reward))
+            
+            # print(type(Q_value_bellman))
+            # print(Q_value_bellman)
+
+            # update Q_value
+            target = (1-alpha)*Q_value_0 + alpha*Q_value_bellman
+            self.put_Q_value(observation_t0, action_t0, target)
+            
+            action_t0 = action_t1
+
+            observation_t0 = observation_t1
+
+            if terminated or turncated:
+                break
+
+            if i>iter_limit:
+                break
+        
+            i = i+1
+
+        print("total steps : {}".format(i))
+
+        return
 
     def drive_by_key(self):
         
@@ -284,14 +344,14 @@ if __name__ == "__main__":
     agent = Agent()
 
     agent.put_gym_env(env_headless)
-    agent.drive_sarsa_tabel(1)
-    for i in range(100):
+    # agent.drive_Q_tabel(1)e
+    for i in range(10000):
         print("generation : {}".format(i))
-        agent.drive_sarsa_tabel(0.1)
+        agent.drive_Q_tabel(0.1)
     
     agent.put_gym_env(env_screen)
-    for i in range(100):
-        agent.drive_sarsa_tabel(0)
+    for i in range(10):
+        agent.drive_Q_tabel(0)
 
 
 
