@@ -100,7 +100,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
     
     #define hyper parameters
     gamma = 0.9#Q value discount
-    alpha = 0.7#Q_function update ratio
+    alpha = 0.8#Q_function update ratio
     
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
@@ -131,7 +131,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         if terminated or truncated:
             if terminated == 1:
-                reward = -100
+                reward = -5
 
             observation, info = env_arg.reset()
             frame_set = i+1
@@ -155,9 +155,12 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         return_sum = 0
         for j in range(i, frame_set):
             return_sum +=  y_return[j, :]*(gamma**(j-i))
-            # print(return_sum)
-
-        y_output_rtn[i, :] = return_sum
+        print(return_sum)
+        
+        # Q_value = model_arg.predict(x_input_rtn[i])
+        # y_output_rtn[i, :] = (alpha)*Q_value + (1-alpha)*return_sum
+        Q_value = model_arg.predict(x_input_rtn[i].reshape(1,observation_sapce_size+1))
+        y_output_rtn[i, :] = (alpha)*Q_value + (1-alpha)*return_sum
 
     #rolling_queue
 
@@ -185,7 +188,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     
     #define hyper parameters
     gamma = 0.9#Q value discount
-    alpha = 0.7#Q_function update ratio
+    alpha = 0.8#Q_function update ratio
     
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
@@ -201,8 +204,10 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         #pick next state and action ; which will be used in next iteration 
         # action_value_all = perdict_model(model_arg, observation, action_sapce)
         # action_index = action_value_all.argmax()
-        # action_pick = env_arg.action_space.sample()
-        action_pick = pick_action(model_arg, observation, action_sapce)
+        if(np.random.rand() < 0.3):
+            action_pick = env_arg.action_space.sample()
+        else:
+            action_pick = pick_action(model_arg, observation, action_sapce)
 
         # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
 
@@ -217,7 +222,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
         if terminated or truncated:
             if terminated == 1:
-                reward = -100
+                reward = -5
 
             observation, info = env_arg.reset()
             frame_set = i+1
@@ -241,9 +246,12 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         return_sum = 0
         for j in range(i, frame_set):
             return_sum +=  y_return[j, :]*(gamma**(j-i))
-            print(return_sum)
-
-        y_output_rtn[i, :] = return_sum
+        print(return_sum)
+        print(type(x_input_rtn[i]))
+        print(x_input_rtn[i].shape)
+        print(x_input_rtn[i])
+        Q_value = model_arg.predict(x_input_rtn[i].reshape(1,observation_sapce_size+1))
+        y_output_rtn[i, :] = (alpha)*Q_value + (1-alpha)*return_sum
 
     #rolling_queue
 
@@ -256,10 +264,10 @@ def create_model(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
-    model_rtn.add(Dense(128, activation='sigmoid'))
     model_rtn.add(Dense(64, activation='sigmoid'))
-    model_rtn.add(Dense(16, activation='sigmoid'))
-    model_rtn.add(Dense(1, activation='sigmoid'))
+    model_rtn.add(Dense(64, activation='relu'))
+    model_rtn.add(Dense(16, activation='relu'))
+    model_rtn.add(Dense(1, activation='relu'))
     model_rtn.compile(loss='mse', optimizer=Adam())
     
     return model_rtn
@@ -279,7 +287,7 @@ def create_model_sigmoid(env_arg):
 
 def create_model_relu(env_arg):
     observation_sapce_size = env_arg.env.observation_space._shape[0]
-
+    
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
     model_rtn.add(Dense(128, activation='relu'))
@@ -348,28 +356,19 @@ def pick_action_verbose(model_arg, observation_arg, action_sapce_arg):
     return action_pick
 
 if __name__ == '__main__':
-    # env = gym.make("CartPole-v1", render_mode="human")
+    env_screen = gym.make("CartPole-v1", render_mode="human")
     env =  gym.make ("CartPole-v1")
 
-    print("================")
-    print(env.action_space)
-    print(env.action_space.n)
-    print(type(env.action_space.n))
-
-
-    print(env.observation_space._shape)
-    print(env.observation_space._shape[0])
-    print(type(env.observation_space._shape[0]))
-
     num_of_frame = 100
+    # model_glb = create_model(env)
     model_glb = create_model_relu(env)
+    # model_glb = create_model_sigmoid(env)
 
     #initial random drive
-    for i in range(100):
+    for i in range(1000):
         x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
         learning_model(model_glb, x_input, y_output)
     
-    env_screen = gym.make("CartPole-v1", render_mode="human")
     #incremental MC 
     num_of_frame = 1000
     iter = 10000
@@ -377,7 +376,7 @@ if __name__ == '__main__':
         print("{}/{}======================================".format(i, iter))
         
     #     # if(i%2 == 0):
-        if(i % 1 == 0):
+        if(i % 100 == 0):
             x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
             print("{}/{}======================================".format(i, iter))
             learning_model_batch_10(model_glb, x_input, y_output)
