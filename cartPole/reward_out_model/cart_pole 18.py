@@ -99,7 +99,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
     frame_set = 0
     
     #define hyper parameters
-    gamma = 0.9#Q value discount
+    gamma = 0.95#Q value discount
     alpha = 0.8#Q_function update ratio
     
     mode = 0 # 0 : SARSA, 1 : Q_learning
@@ -148,7 +148,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
-        if terminated == 1:
+        if terminated or truncated == 1:
             break
 
     for i in range(frame_set):
@@ -187,9 +187,9 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     frame_set = 0
     
     #define hyper parameters
-    gamma = 0.9#Q value discount
+    gamma = 0.95#Q value discount
     alpha = 0.8#Q_function update ratio
-    
+    epsilon = 0.1
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
@@ -204,7 +204,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         #pick next state and action ; which will be used in next iteration 
         # action_value_all = perdict_model(model_arg, observation, action_sapce)
         # action_index = action_value_all.argmax()
-        if(np.random.rand() < 0.3):
+        if(np.random.rand() < epsilon):
             action_pick = env_arg.action_space.sample()
         else:
             action_pick = pick_action(model_arg, observation, action_sapce)
@@ -239,7 +239,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
-        if terminated == 1:
+        if terminated or truncated == 1:
             break
 
     for i in range(frame_set):
@@ -365,18 +365,24 @@ if __name__ == '__main__':
     # model_glb = create_model_sigmoid(env)
 
     #initial random drive
-    for i in range(1000):
-        x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
-        learning_model(model_glb, x_input, y_output)
-    
+    for i in range(100):        
+        if(i % 10 == 0):
+            x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
+            print("{}/{}======================================".format(i, iter))
+            learning_model_batch_10(model_glb, x_input, y_output)
+        else:
+            x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
+            print("{}/{}======================================".format(i, iter))
+            learning_model_batch_10(model_glb, x_input, y_output)
+        
     #incremental MC 
-    num_of_frame = 1000
+    num_of_frame = 10000
     iter = 10000
     for i in range(iter):
         print("{}/{}======================================".format(i, iter))
         
     #     # if(i%2 == 0):
-        if(i % 100 == 0):
+        if(i % 10 == 0):
             x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
             print("{}/{}======================================".format(i, iter))
             learning_model_batch_10(model_glb, x_input, y_output)
