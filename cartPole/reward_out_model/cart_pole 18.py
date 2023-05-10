@@ -90,6 +90,7 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
 
     # create data space 
     x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
+    y_return = np.zeros((num_of_frame_arg, 1))
     y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
     #define temporal parameters
@@ -128,36 +129,43 @@ def drive_env_random(env_arg, num_of_frame_arg, model_arg):
         #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
-        
         if terminated or truncated:
             if terminated == 1:
                 reward = -100
-            Q_target = reward
 
             observation, info = env_arg.reset()
-            frame_set = i
+            frame_set = i+1
             frame = 0
             reward_sum = 0
-
-        else:
-            Q_target = reward + gamma*action_value
         
+        y_return[i, :] = reward
         # print("=================")
         # print(Q_target)
         # print(y_output_rtn[i, :])
-        y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
+        # y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
         # print(y_output_rtn[i, :])
+        
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
         if terminated == 1:
             break
 
+    for i in range(frame_set):
+        return_sum = 0
+        for j in range(i, frame_set):
+            return_sum +=  y_return[j, :]*(gamma**(j-i))
+            # print(return_sum)
+
+        y_output_rtn[i, :] = return_sum
+
+    #rolling_queue
+
     return x_input_rtn, y_output_rtn
 
 
 
-def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
+def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):    
     observation, info = env_arg.reset()
 
     # check action and observation space size
@@ -167,6 +175,7 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
 
     # create data space 
     x_input_rtn = np.zeros((num_of_frame_arg, observation_sapce_size+1))
+    y_return = np.zeros((num_of_frame_arg, 1))
     y_output_rtn = np.zeros((num_of_frame_arg, 1))
 
     #define temporal parameters
@@ -181,55 +190,63 @@ def drive_env_by_model(env_arg, num_of_frame_arg, model_arg):
     mode = 0 # 0 : SARSA, 1 : Q_learning
 
     # pick initial action
-    action_value_all = perdict_model(model_arg, observation, action_sapce)
-    action_index = action_value_all.argmax()
-    action_pick = action_sapce[action_index]
+    # action_value_all = perdict_model(model_arg, observation, action_sapce)
+    # action_index = action_value_all.argmax()
+    action_pick = pick_action(model_arg, observation, action_sapce)
     
     for i in range(num_of_frame_arg):
-        frame += 1
-
+        
         observation, reward, terminated, truncated, info = env_arg.step(action_pick)
         
         #pick next state and action ; which will be used in next iteration 
-        action_value_all = perdict_model(model_arg, observation, action_sapce)
-        # print("=======================")
-        # print(action_sapce)
-        # print(action_value_all)
-        action_index = action_value_all.argmax()
-        action_pick = action_sapce[action_index]
+        # action_value_all = perdict_model(model_arg, observation, action_sapce)
+        # action_index = action_value_all.argmax()
+        # action_pick = env_arg.action_space.sample()
+        action_pick = pick_action(model_arg, observation, action_sapce)
+
         # action_value 중 최대 값을 선택하면 Q-learnig, action_value의 평균값을 사용하면 SARSA
 
-        if mode == 0:
-            action_value = action_value_all.mean()#SARSA mode
-        else : 
-            action_value = action_value_all[action_index]# Q_learning mode
+        # if mode == 0:
+        #     action_value = action_value_all.mean()#SARSA mode
+        # else : 
+        #     action_value = action_value_all[action_index]# Q_learning mode
 
         # if(reward_sum < 10):#reward seturation
         #     reward_sum += reward
         x_input_rtn[i, 0:observation_sapce_size] = observation[:] # 파이썬 인덱싱에 주의할 것. 인덱스가 1:4 이면 끝나는 인덱스가 0번 부터 3번까지
         x_input_rtn[i, observation_sapce_size:observation_sapce_size+1] = action_pick
-        
-        if terminated or truncated: 
+        if terminated or truncated:
             if terminated == 1:
                 reward = -100
-            Q_target = reward
 
             observation, info = env_arg.reset()
-            frame_set = i
+            frame_set = i+1
             frame = 0
             reward_sum = 0
-
-        else:
-            Q_target = reward + gamma*action_value
-
+        
+        y_return[i, :] = reward
+        # print("=================")
         # print(Q_target)
-        y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
-
+        # print(y_output_rtn[i, :])
+        # y_output_rtn[i, :] = alpha*y_output_rtn[i, :] + (1-alpha)*Q_target
+        # print(y_output_rtn[i, :])
+        
         if i % 10 == 0:
             print("{}, {} and {} %".format(i, num_of_frame_arg, round((i/num_of_frame_arg)*100)))
         
         if terminated == 1:
             break
+
+    for i in range(frame_set):
+        return_sum = 0
+        for j in range(i, frame_set):
+            return_sum +=  y_return[j, :]*(gamma**(j-i))
+            print(return_sum)
+
+        y_output_rtn[i, :] = return_sum
+
+    #rolling_queue
+
     return x_input_rtn, y_output_rtn
 
 
@@ -265,8 +282,9 @@ def create_model_relu(env_arg):
 
     model_rtn = Sequential()
     model_rtn.add(keras.Input(shape=(observation_sapce_size+1)))
+    model_rtn.add(Dense(128, activation='relu'))
     model_rtn.add(Dense(64, activation='relu'))
-    model_rtn.add(Dense(64, activation='relu'))
+    model_rtn.add(Dense(16, activation='relu'))
     model_rtn.add(Dense(1, activation='relu'))
     model_rtn.compile(loss='mse', optimizer=Adam())
     
@@ -344,29 +362,29 @@ if __name__ == '__main__':
     print(type(env.observation_space._shape[0]))
 
     num_of_frame = 100
-    model_glb = create_model_sigmoid(env)
+    model_glb = create_model_relu(env)
 
     #initial random drive
-    for i in range(1000):
+    for i in range(100):
         x_input, y_output = drive_env_random(env, num_of_frame, model_glb)
         learning_model(model_glb, x_input, y_output)
     
     env_screen = gym.make("CartPole-v1", render_mode="human")
     #incremental MC 
     num_of_frame = 1000
-    iter = 1000
+    iter = 10000
     for i in range(iter):
-    #     print("{}/{}======================================".format(i, iter))
+        print("{}/{}======================================".format(i, iter))
         
-        # if(i%2 == 0):
-        if(i % 5 == 0):
-            x_input, y_output = drive_env_random(env_screen, num_of_frame, model_glb)
+    #     # if(i%2 == 0):
+        if(i % 1 == 0):
+            x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
             print("{}/{}======================================".format(i, iter))
             learning_model_batch_10(model_glb, x_input, y_output)
         else:
-            x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
+            x_input, y_output = drive_env_by_model(env, num_of_frame, model_glb)
             print("{}/{}======================================".format(i, iter))
-            learning_model(model_glb, x_input, y_output)
+            learning_model_batch_10(model_glb, x_input, y_output)
 
         # x_input, y_output = drive_env_by_model(env_screen, num_of_frame, model_glb)
         # print("{}/{}======================================".format(i, iter))
