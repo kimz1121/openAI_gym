@@ -135,27 +135,39 @@ class dqn_agent():
         self.reward_0 = np.empty([1, sequnce_length])
         self.seqeunce_1 = np.empty([batch_length, sequnce_length])
 
-    def push_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
+    def push_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
         self.sequnce_length = 5
         self.batch_length = 20
         self.queue_front = 0
         self.queue_rear = 0
-        self.queue_full_tag = 0#0 : not full, 1 : full
+        self.queue_full_tag = 0#0 : not full, 1 : full, 2 : overided
 
         # index = self.batch_counter%self.batch_length
-
         if self.queue_full_tag == 0:
-            self.seqeunce_0[self.queue_front, :] = seqeunce_0_arg[1, :]
-            self.action_0[self.queue_front, :] = action_0_arg[1, :]
-            self.reward_0[self.queue_front, :] = reward_0_arg[1, :]
-            self.seqeunce_1[self.queue_front, :] = seqeunce_1_arg[1, :]
+            self.queue_rear = (self.queue_rear+1)%self.batch_length
+            index = self.queue_rear
+            if self.queue_front == self.queue_rear:
+                self.queue_full_tag = 1
 
-        if self.queue_front >= self.batch_length:
-            self.queue_front = 0
         else:
-            self.queue_front += 1
+            #이미 큐가 꽉찬 상태.
+            #큐를 이동하며 기존의 내용을 덮어쓴다.
+            self.queue_rear = (self.queue_rear+1)%self.batch_length
+            self.queue_front = self.queue_rear#
+            index = self.queue_rear
+            self.queue_full_tag = 2
+
+        self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
+        self.action_0[index, :] = action_0_arg[1, :]
+        self.reward_0[index, :] = reward_0_arg[1, :]
+        self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
 
         return self.queue_full_tag
+    
+    def pop_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
+        
+        return
+
         
     def set_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
         # index = self.batch_counter%self.batch_length
