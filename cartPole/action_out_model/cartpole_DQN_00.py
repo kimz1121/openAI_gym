@@ -72,10 +72,10 @@ class dqn_agent():
 
         # 초기 상태
         # 필요 요소, SA 필요
-        observation, info = self.env.reset()
+        observation_0, info = self.env.reset()
 
-        observation_input = observation.reshape([1, self.observation_sapce_size])
-        Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)#Q_value from behaivior policy
+        observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
+        Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)#Q_value from behaivior policy
         # print(Q_value_0)
         print(Q_value_0.shape)
         action_0 = self.pick_action(Q_value_0, epsilon=0.1)
@@ -85,11 +85,14 @@ class dqn_agent():
         # 필요 요소, RSA
 
             #RS
-            observation, reward, terminated, tuncated, info = self.env.step(action_0)
+            observation_1, reward, terminated, tuncated, info = self.env.step(action_0)
             #A
-            Q_value_0 =  self.target_model.predict(observation_input, verbose = 0)#Q_value from target policy
-            action_1 = self.pick_action(Q_value_0, epsilon=0)
-        
+            observation_1_input = observation_1.reshape([1, self.observation_sapce_size])
+            Q_value_1 =  self.target_model.predict(observation_1_input, verbose = 0)#Q_value from target policy
+            action_1 = self.pick_action(Q_value_1, epsilon=0)
+
+            
+
             #replay buffer
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
 
@@ -114,7 +117,9 @@ class dqn_agent():
         action  = self.action_space[action_index]
         return action
 
-
+    def mask_target(self):
+        
+        return
     
     def set_env(self, env_arg : gym.Env):
         self.env = env_arg
