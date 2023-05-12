@@ -64,6 +64,7 @@ class dqn_agent():
         # target 생성
 
         # 초기 상태
+        # 필요 요소, SA 필요
         observation, info = self.env.reset()
 
         observation_input = observation.reshape([1, self.observation_sapce_size])
@@ -71,6 +72,8 @@ class dqn_agent():
 
         print(Q_value_0)
         # for i in range(500)#시나리오의 최대 길이 500 만큼 반복
+        # 반복 상태 
+        # 필요 요소, RSA
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
         return Q_value_0
