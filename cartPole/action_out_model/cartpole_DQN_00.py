@@ -98,7 +98,7 @@ class dqn_agent():
 
             if i % C_step == 0:
                 train_set = self.get_train_set()
-                train
+                
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
         return Q_value_0
@@ -119,10 +119,15 @@ class dqn_agent():
         action  = self.action_space[action_index]
         return action
     
-    def create_minibathch(self):#minibatch
-        sequnce_length = 5
+    def reset_minibathch(self):#minibatch
+        self.sequnce_length = 5
+        self.batch_length = 20
+        self.queue_front = 0
+        self.queue_rear = 0
+        self.queue_full_tag = 0#0 : not full, 1 : full
+
+        sequnce_length = self.sequnce_length
         self.batch_length = 10
-        self.batch_counter = 0
         
         batch_length = self.batch_length
         self.seqeunce_0 = np.empty([batch_length, sequnce_length])
@@ -130,18 +135,49 @@ class dqn_agent():
         self.reward_0 = np.empty([1, sequnce_length])
         self.seqeunce_1 = np.empty([batch_length, sequnce_length])
 
-    def put_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):            
-        self.batch_length
-        self.batch_counter
+    def push_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
+        self.sequnce_length = 5
+        self.batch_length = 20
+        self.queue_front = 0
+        self.queue_rear = 0
+        self.queue_full_tag = 0#0 : not full, 1 : full
 
-        index = self.batch_counter%self.batch_length
+        # index = self.batch_counter%self.batch_length
 
+        if self.queue_full_tag == 0:
+            self.seqeunce_0[self.queue_front, :] = seqeunce_0_arg[1, :]
+            self.action_0[self.queue_front, :] = action_0_arg[1, :]
+            self.reward_0[self.queue_front, :] = reward_0_arg[1, :]
+            self.seqeunce_1[self.queue_front, :] = seqeunce_1_arg[1, :]
+
+        if self.queue_front >= self.batch_length:
+            self.queue_front = 0
+        else:
+            self.queue_front += 1
+
+        return self.queue_full_tag
+        
+    def set_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
+        # index = self.batch_counter%self.batch_length
+        
         self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
         self.action_0[index, :] = action_0_arg[1, :]
         self.reward_0[index, :] = reward_0_arg[1, :]
         self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
+        
+    def get_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):            
+        self.batch_length
+        self.batch_counter
 
-        self.batch_counter += 1
+        # index = self.batch_counter%self.batch_length
+        index_circle = self.batch_counter + index
+        
+        seqeunce_0_rtn = self.seqeunce_0[index, :]
+        action_0_rtn = self.action_0[index, :]
+        reward_0_rtn = self.reward_0[index, :]
+        seqeunce_1_rtn = self.seqeunce_1[index, :]
+
+        return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
     def get_train_set(self):
         
