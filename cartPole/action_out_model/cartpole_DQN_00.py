@@ -44,7 +44,8 @@ class dqn_agent():
 
     #env spec value
     observation_sapce_size = 0
-    action_sapce_size = 0
+    action_space_size = 0
+    action_space = 0
 
     def __init__(self):
 
@@ -63,23 +64,57 @@ class dqn_agent():
             # 이를 통해 Loss 계산에서 다른 액션의 항에 의한 영향들은 모두 0이 되므로 Loss 에는 한 행동의 영향만이 적용된다.   
         # target 생성
 
+        #상수 선언
+        # gamma = self.gamma
+        # epsilon = self.epsilon
+        gamma = 0.99
+        epsilon = 0.1
+
         # 초기 상태
         # 필요 요소, SA 필요
         observation, info = self.env.reset()
 
         observation_input = observation.reshape([1, self.observation_sapce_size])
-        Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)
-
-        print(Q_value_0)
-        # for i in range(500)#시나리오의 최대 길이 500 만큼 반복
+        Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)#Q_value from behaivior policy
+        # print(Q_value_0)
+        print(Q_value_0.shape)
+        action_0 = self.pick_action(Q_value_0, epsilon=0.1)
+        # print(action_0)
+        for i in range(500):#시나리오의 최대 길이 500 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
+
+            #RS
+            observation, reward, terminated, tuncated, info = self.env.step(action_0)
+            #A
+            Q_value_0 =  self.target_model.predict(observation_input, verbose = 0)#Q_value from target policy
+            action_1 = self.pick_action(Q_value_0, epsilon=0)
+        
+            #replay buffer
+            # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
+
+            target = 
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
         return Q_value_0
     
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
     #     return
+
+    def pick_action(self, Q_value, epsilon):
+        """
+        input : Q_value : type np.array(1, None) 2 demension
+        """
+        self.action_space
+        
+        if np.random.rand() > epsilon:
+            action_index = Q_value.argmax()# 타입 
+        else:
+            action_index = np.random.choice(self.action_space)
+        action  = self.action_space[action_index]
+        return action
+
+
     
     def set_env(self, env_arg : gym.Env):
         self.env = env_arg
@@ -87,7 +122,8 @@ class dqn_agent():
     
     def inspect_env(self):
         self.observation_sapce_size = self.env.observation_space._shape[0]
-        self.action_sapce_size = self.env.action_space.n
+        self.action_space_size = self.env.action_space.n
+        self.action_space = np.array(range(self.action_space_size))
 
     def create_nn(self):
         #custom loss function
@@ -97,7 +133,7 @@ class dqn_agent():
         self.action_model.add(tf.keras.layers.Dense(128, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(16, activation='relu'))
-        self.action_model.add(tf.keras.layers.Dense(self.action_sapce_size, activation='relu'))#출력 레이어
+        self.action_model.add(tf.keras.layers.Dense(self.action_space_size, activation='relu'))#출력 레이어
         self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD())
 
         self.target_model = tf.keras.Sequential()
@@ -105,7 +141,7 @@ class dqn_agent():
         self.target_model.add(tf.keras.layers.Dense(128, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(16, activation='relu'))
-        self.target_model.add(tf.keras.layers.Dense(self.action_sapce_size, activation='relu'))#출력 레이어
+        self.target_model.add(tf.keras.layers.Dense(self.action_space_size, activation='relu'))#출력 레이어
         self.target_model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD())
 
         self.target_model.summary()
