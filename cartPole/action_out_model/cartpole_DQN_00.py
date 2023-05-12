@@ -55,6 +55,7 @@ class dqn_agent():
     
     
     def drive_model(self):
+        print("drive_model")
         # 각 단계에서의 행동선택
         # ★하나의 액션에 대하여 한정하여  loss를 계산하는 방법은
             # 선택 된 액션 이외의 교사값은 모델의 예측갑을 그대로 전달하여 같게하고, 
@@ -62,7 +63,17 @@ class dqn_agent():
             # 이를 통해 Loss 계산에서 다른 액션의 항에 의한 영향들은 모두 0이 되므로 Loss 에는 한 행동의 영향만이 적용된다.   
         # target 생성
 
-        return
+        # 초기 상태
+        observation, info = self.env.reset()
+
+        observation_input = observation.reshape([1, self.observation_sapce_size])
+        Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)
+
+        print(Q_value_0)
+        # for i in range(500)#시나리오의 최대 길이 500 만큼 반복
+
+        # observation, reward, terminated, turncated, info = self.env.step(0)
+        return Q_value_0
     
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
     #     return
@@ -96,6 +107,9 @@ class dqn_agent():
 
         self.target_model.summary()
 
+        self.action_model.set_weights(self.target_model.get_weights())
+
+
 if __name__ == "__main__":
     # env_headless = gym.make("CartPole-v1", render_mode="human")
     # env_screen = gym.make("CartPole-v1")
@@ -106,6 +120,7 @@ if __name__ == "__main__":
 
     agent.set_env(env_screen)
     agent.create_nn()
+    agent.drive_model()
 
     env_headless.reset()
     time.sleep(3)
