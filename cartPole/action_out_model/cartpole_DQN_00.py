@@ -166,7 +166,8 @@ class dqn_agent():
         else:
             self.queue_front = (self.queue_front+1)%self.batch_length
             index = self.queue_front
-            self.queue_full_tag = 1
+            if self.queue_front == self.queue_rear:
+                self.queue_full_tag = 0
 
             
         seqeunce_0_rtn = self.seqeunce_0[index, :]
@@ -184,6 +185,21 @@ class dqn_agent():
         
     def set_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
         # index = self.batch_counter%self.batch_length
+                # index = self.batch_counter%self.batch_length
+         
+        if self.queue_full_tag == 0:
+            self.queue_rear = (self.queue_rear+1)%self.batch_length
+            index = self.queue_rear
+            if self.queue_front == self.queue_rear:
+                self.queue_full_tag = 1
+
+        else:
+            #이미 큐가 꽉찬 상태.
+            #큐를 이동하며 기존의 내용을 덮어쓴다.
+            self.queue_rear = (self.queue_rear+1)%self.batch_length
+            self.queue_front = self.queue_rear#
+            index = self.queue_rear
+            self.queue_full_tag = 2
         
         self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
         self.action_0[index, :] = action_0_arg[1, :]
