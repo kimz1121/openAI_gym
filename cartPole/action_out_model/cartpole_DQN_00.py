@@ -47,6 +47,8 @@ class dqn_agent():
     action_space_size = 0
     action_space = 0
 
+    
+
     def __init__(self):
 
         return
@@ -69,34 +71,34 @@ class dqn_agent():
         # epsilon = self.epsilon
         gamma = 0.99
         epsilon = 0.1
-
+        C_step = 20
         # 초기 상태
-        # 필요 요소, SA 필요
-        observation_0, info = self.env.reset()
-
-        observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
-        Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)#Q_value from behaivior policy
-        # print(Q_value_0)
-        print(Q_value_0.shape)
-        action_0 = self.pick_action(Q_value_0, epsilon=0.1)
+        # 필요 요소, S 초기화
+        observation, info = self.env.reset()
+        observation_input = observation.reshape([1, self.observation_sapce_size])
         # print(action_0)
-        for i in range(500):#시나리오의 최대 길이 500 만큼 반복
+        for i in range(1000):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
-
-            #RS
-            observation_1, reward, terminated, tuncated, info = self.env.step(action_0)
-            #A
-            observation_1_input = observation_1.reshape([1, self.observation_sapce_size])
-            Q_value_1 =  self.target_model.predict(observation_1_input, verbose = 0)#Q_value from target policy
-            action_1 = self.pick_action(Q_value_1, epsilon=0)
-
             
-
+            Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)#Q_value from behaivior policy
+            # print(Q_value_0)
+            print(Q_value_0.shape)
+            action_0 = self.pick_action(Q_value_0, epsilon=0.1)
+            #RS
+            observation, reward, terminated, tuncated, info = self.env.step(action_0)
+            #A
+            observation_input = observation.reshape([1, self.observation_sapce_size])
+            
+            
             #replay buffer
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
 
             target = 
+
+            if i % C_step == 0:
+                train_set = self.get_train_set()
+                train
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
         return Q_value_0
@@ -116,10 +118,39 @@ class dqn_agent():
             action_index = np.random.choice(self.action_space)
         action  = self.action_space[action_index]
         return action
+    
+    def create_minibathch(self):#minibatch
+        sequnce_length = 5
+        self.batch_length = 10
+        self.batch_counter = 0
+        
+        batch_length = self.batch_length
+        self.seqeunce_0 = np.empty([batch_length, sequnce_length])
+        self.action_0 = np.empty([1, sequnce_length])
+        self.reward_0 = np.empty([1, sequnce_length])
+        self.seqeunce_1 = np.empty([batch_length, sequnce_length])
 
+    def put_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):            
+        self.batch_length
+        self.batch_counter
+
+        index = self.batch_counter%self.batch_length
+
+        self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
+        self.action_0[index, :] = action_0_arg[1, :]
+        self.reward_0[index, :] = reward_0_arg[1, :]
+        self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
+
+        self.batch_counter += 1
+
+    def get_train_set(self):
+        
+        return
+    
     def mask_target(self):
         
         return
+    
     
     def set_env(self, env_arg : gym.Env):
         self.env = env_arg
@@ -151,6 +182,9 @@ class dqn_agent():
 
         self.target_model.summary()
 
+        self.action_model.set_weights(self.target_model.get_weights())
+
+    def weights_copy(self):
         self.action_model.set_weights(self.target_model.get_weights())
 
 
