@@ -47,7 +47,9 @@ class dqn_agent():
     action_space_size = 0
     action_space = 0
 
-    
+    #train hyperparameter
+    gamma = 0.99
+    epsilon = 0.1
 
     def __init__(self):
         self.reset_minibathch()
@@ -68,10 +70,10 @@ class dqn_agent():
         # target 생성
 
         #상수 선언
-        # gamma = self.gamma
-        # epsilon = self.epsilon
-        gamma = 0.99
-        epsilon = 0.1
+        gamma = self.gamma
+        epsilon = self.epsilon
+        # gamma = 0.99
+        # epsilon = 0.1
         C_step = 20
         # 초기 상태
         # 필요 요소, S 초기화
@@ -285,26 +287,38 @@ class dqn_agent():
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
     def get_train_set(self, batch_size, seqeunce_0_batch_arg, action_0_batch_arg, reward_0_batch_arg, seqeunce_1_batch_arg):
-        input_space_action = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)
+        
+        
+        #s_0
+        input_space_action = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)s
+        #s_1
         input_space_target = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)
         
         output_space = np.empty(batch_size, self.action_space_size)
 
         for i in range(batch_size):# faltten obserbation
-            #s_0
+            # for each action
             for j in range(self.sequence_length):
+                #for sequence
+                #s_0
                 input_space_action[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_0_batch_arg[i, :, j]
+                #s_1
                 input_space_target[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_1_batch_arg[i, :, j]
 
             #y_j = G_j
             # = r_j + G_j+1
             # = r_j + Q(s_1, a_1 theta-) : theta- weight of target network
-            observation_1 = seqeunce_1_batch_arg[i, :, j]
+            
+            Q_value_1 =  self.target_model.predict(input_space_target[i], verbose = 0)
+            action_1 = Q_value_1.argmax()#greedy-action
+            TD_target = Q_value_1[action_1] + reward_0_batch_arg[i]#add reward
 
             #Loss 
-            # = y_j - Q(s_0, a_0 theta)
-            observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
-            Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)
+            # = y_j - Q(s_0, a_0 theta) : theta- weight of action network
+            Q_value_0 =  self.action_model.predict(input_space_action[i], verbose = 0)
+            action_0 = action_0_batch_arg[i]
+            Q_value_1[action_0]#epsilon-greedy
+            target = 
 
     def mask_target(self, measure_q, predict_q):
 
