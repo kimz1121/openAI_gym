@@ -46,7 +46,7 @@ class dqn_agent():
     observation_sapce_size = 0
     action_space_size = 0
     action_space = 0
-    batch_size = 10
+    batch_size = 5
 
     #train hyperparameter
     gamma = 0.99
@@ -70,7 +70,7 @@ class dqn_agent():
         observation_0_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
         observation_1_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
         observation_1, info = self.env.reset()
-        iter = self.batch_size*10
+        iter = self.queue_length
         for i in range(iter):
             print("버퍼 초기화 {:3}% 완료".format(round(100*(i/iter))))
             observation_0 = observation_1
@@ -178,7 +178,7 @@ class dqn_agent():
     
     def reset_minibathch(self):#minibatch
         self.sequence_length = 1
-        self.queue_length = 20
+        self.queue_length = 50
         self.queue_front = 0
         self.queue_rear = 0
         self.queue_full_tag = 0#0 : not full, 1 : full
@@ -433,7 +433,13 @@ if __name__ == "__main__":
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
+        if i%5 == 0:
+            agent.set_env(env_screen)
+        else:
+            agent.set_env(env_headless)
+
         agent.drive_model()
+
         if i%25 == 0:
             agent.save_model(generation, i)
 
