@@ -46,6 +46,7 @@ class dqn_agent():
     observation_sapce_size = 0
     action_space_size = 0
     action_space = 0
+    batch_size = 5
 
     #train hyperparameter
     gamma = 0.99
@@ -98,7 +99,7 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
 
-            self.push_minibatch(observation_0_sequence, reward, action, observation_1_sequence)
+            self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence)
             
             self.get_minibatch_mass()
             # if i % C_step == 4:
@@ -124,7 +125,8 @@ class dqn_agent():
         
         print("----------")
         self.get_minibatch_mass()
-        train_set = self.get_minibatch_random_sample(5)
+        train_set = self.get_minibatch_random_sample(self.batch_size)
+        self.get_train_set(self.batch_size, *train_set)
         print(train_set[0].shape)
         print(train_set[0].shape)
         print(train_set[0].shape)
@@ -287,14 +289,12 @@ class dqn_agent():
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
     def get_train_set(self, batch_size, seqeunce_0_batch_arg, action_0_batch_arg, reward_0_batch_arg, seqeunce_1_batch_arg):
-        
-        
         #s_0
-        input_space_action = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)s
+        input_space_action = np.empty([batch_size, self.observation_sapce_size*self.sequence_length])
         #s_1
-        input_space_target = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)
+        input_space_target = np.empty([batch_size, self.observation_sapce_size*self.sequence_length])
         
-        output_space = np.empty(batch_size, self.action_space_size)
+        output_space = np.empty([batch_size, self.action_space_size])
 
         for i in range(batch_size):# faltten obserbation
             # for each action
@@ -304,18 +304,32 @@ class dqn_agent():
                 input_space_action[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_0_batch_arg[i, :, j]
                 #s_1
                 input_space_target[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_1_batch_arg[i, :, j]
-
+            print("==============")
+            print(input_space_action.shape)
+            print(input_space_target.shape)
+            print(i)
+            print(input_space_action[i, :].shape)
+            print(input_space_target[i, :].shape)
+            a = input_space_target[i, :]
+            print(a.shape)
+            
+            
             #y_j = G_j
             # = r_j + G_j+1
             # = r_j + Q(s_1, a_1 theta-) : theta- weight of target network
             
-            Q_value_1 =  self.target_model.predict(input_space_target[i], verbose = 0)
+            Q_value_1 =  self.target_model.predict(input_space_target[i, :].reshape([1, 8]), verbose = 0)
             action_1 = Q_value_1.argmax()#greedy-action
-            Q_value_1[action_1] = Q_value_1[action_1] + reward_0_batch_arg[i]#add reward for the action_0
+            print(type(reward_0_batch_arg))
+            print(reward_0_batch_arg.shape)
+            print(reward_0_batch_arg)
+            print(Q_value_1)
+            print(action_1)
+            Q_value_1[0, action_1] = Q_value_1[0, action_1] + reward_0_batch_arg[i]#add reward for the action_0
 
             #Loss 
             # = y_j - Q(s_0, a_0 theta) : theta- weight of action network
-            Q_value_0 =  self.action_model.predict(input_space_action[i], verbose = 0)
+            Q_value_0 =  self.action_model.predict(input_space_action[i, :].reshape([1, 8]), verbose = 0)
             # calc loss for only action_0
             # by a method shows Q_value which is more exact
             # 더 정확히 액션 밸류를 평가하기 위해서는, 행동 정책을 통해 reward가 반영된 actoin에 대하여서만 
@@ -325,7 +339,9 @@ class dqn_agent():
             # update Q_value only about action_0 
 
             action_0 = action_0_batch_arg[i]#epsilon-greey and the action what the machine choosed in state_0
-            Q_value_0[action_0] = Q_value_1[action_1]
+            print(type(action_0))
+            print(type(action_1))
+            Q_value_0[0, action_0] = Q_value_1[0, action_1]
 
             output_space[i, :] = Q_value_0[:]
 
