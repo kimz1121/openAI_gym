@@ -50,6 +50,7 @@ class dqn_agent():
     
 
     def __init__(self):
+        self.reset_minibathch()
 
         return
     
@@ -74,30 +75,29 @@ class dqn_agent():
         C_step = 20
         # 초기 상태
         # 필요 요소, S 초기화
-        observation, info = self.env.reset()
-        observation_input = observation.reshape([1, self.observation_sapce_size])
+        self.reset_minibathch()#replay buffer 초기화
+        observation_1, info = self.env.reset()
         # print(action_0)
         for i in range(1000):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
-            
-            Q_value_0 =  self.action_model.predict(observation_input, verbose = 0)#Q_value from behaivior policy
+            #state_0  = state_1 다음 상황으로 넘어감.
+            observation_0 = observation_1
+            observation_input_0 = observation_0.reshape([1, self.observation_sapce_size])
+            Q_value_0 =  self.action_model.predict(observation_input_0, verbose = 0)#Q_value from behaivior policy
             # print(Q_value_0)
             print(Q_value_0.shape)
-            action_0 = self.pick_action(Q_value_0, epsilon=0.1)
-            #RS
-            observation, reward, terminated, tuncated, info = self.env.step(action_0)
-            #A
-            observation_input = observation.reshape([1, self.observation_sapce_size])
-            
-            
+            action = self.pick_action(Q_value_0, epsilon=0.1)
+
+            observation_1, reward, terminated, tuncated, info = self.env.step(action)
+            observation_input_1 = observation_1.reshape([1, self.observation_sapce_size])
             #replay buffer
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
+            self.push_minibatch(observation_input_0, reward, action, observation_input_1)
 
-            target = 
 
-            if i % C_step == 0:
-                train_set = self.get_train_set()
+            # if i % C_step == 0:
+            #     train_set = self.get_train_set()
                 
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
@@ -120,7 +120,7 @@ class dqn_agent():
         return action
     
     def reset_minibathch(self):#minibatch
-        self.sequence_length = 5
+        self.sequence_length = 1
         self.queue_length = 20
         self.queue_front = 0
         self.queue_rear = 0
@@ -128,8 +128,8 @@ class dqn_agent():
         
         queue_length = self.queue_length
         self.seqeunce_0 = np.empty([self.queue_length, self.sequence_length])
-        self.action_0 = np.empty([self.queue_length, 1])
-        self.reward_0 = np.empty([self.queue_length, 1])
+        self.action_0 = np.empty([self.queue_length, 0])
+        self.reward_0 = np.empty([self.queue_length, 0])
         self.seqeunce_1 = np.empty([queue_length, self.sequence_length])
 
     def push_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
@@ -149,10 +149,10 @@ class dqn_agent():
             index = self.queue_rear
             self.queue_full_tag = 2
 
-        self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
-        self.action_0[index, :] = action_0_arg[1, :]
-        self.reward_0[index, :] = reward_0_arg[1, :]
-        self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
+        self.seqeunce_0[index, :] = seqeunce_0_arg[0, :]
+        self.action_0[index, :] = action_0_arg[0, :]
+        self.reward_0[index, :] = reward_0_arg[0, :]
+        self.seqeunce_1[index, :] = seqeunce_1_arg[0, :]
 
         return self.queue_full_tag
     
@@ -207,16 +207,16 @@ class dqn_agent():
         if index < num_of_elements:
             index_circle = (self.queue_front + index)%self.queue_length
         
-            self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
-            self.action_0[index, :] = action_0_arg[1, :]
-            self.reward_0[index, :] = reward_0_arg[1, :]
-            self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
+            self.seqeunce_0[index, :] = seqeunce_0_arg[0, :]
+            self.action_0[index, :] = action_0_arg[0, :]
+            self.reward_0[index, :] = reward_0_arg[0, :]
+            self.seqeunce_1[index, :] = seqeunce_1_arg[0, :]
         
         else:
             assert 1, "out of index"
 
 
-    def get_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):           
+    def get_minibatch(self, index):           
         num_of_elements = self.get_minibatch_mass()
 
         # index = self.batch_counter%self.queue_length
@@ -231,15 +231,24 @@ class dqn_agent():
             assert 1, "out of index"
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
-    def get_train_set(self):
+    def get_train_set(self, batch_size):
+        seqeunce_0_batch_rtn = np.empty(batch_size, self.sequence_length)
+        action_0_batch_rtn = np.empty(batch_size, 1)
+        reward_0_batch_rtn = np.empty(batch_size, 1)
+        seqeunce_1_batch_rtn = np.empty(batch_size, self.sequence_length)
 
+        queue_size = self.get_minibatch_mass()
 
-        seqeunce_0_batch_rtn = np.empty()
-        action_0_batch_rtn = np.empty()
-        reward_0_batch_rtn = np.empty()
-        seqeunce_1_batch_rtn = np.empty()
-
-        seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch()
+        index = np.random.choice(range(queue_size), batch_size)
+        index_list = index.tolist()
+        i = 0
+        for index in index_list:
+            seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch(index)
+            seqeunce_0_batch_rtn[i, :] = seqeunce_0_rtn[0, :]
+            action_0_batch_rtn[i, :] = action_0_rtn[0, :]
+            reward_0_batch_rtn[i, :] = reward_0_rtn[0, :]
+            seqeunce_1_batch_rtn[i, :] = seqeunce_1_rtn[0, :]
+            i+1
 
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
