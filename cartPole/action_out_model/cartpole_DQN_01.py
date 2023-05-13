@@ -284,8 +284,30 @@ class dqn_agent():
 
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
-    def mask_target(self):
+    def get_train_set(self, batch_size, seqeunce_0_batch_arg, action_0_batch_arg, reward_0_batch_arg, seqeunce_1_batch_arg):
+        input_space_action = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)
+        input_space_target = np.empty(batch_size, self.observation_sapce_size*self.sequence_length)
         
+        output_space = np.empty(batch_size, self.action_space_size)
+
+        for i in range(batch_size):# faltten obserbation
+            #s_0
+            for j in range(self.sequence_length):
+                input_space_action[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_0_batch_arg[i, :, j]
+                input_space_target[i, j*self.observation_sapce_size:(j+1)*self.observation_sapce_size] = seqeunce_1_batch_arg[i, :, j]
+
+            #y_j = G_j
+            # = r_j + G_j+1
+            # = r_j + Q(s_1, a_1 theta-) : theta- weight of target network
+            observation_1 = seqeunce_1_batch_arg[i, :, j]
+
+            #Loss 
+            # = y_j - Q(s_0, a_0 theta)
+            observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
+            Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)
+
+    def mask_target(self, measure_q, predict_q):
+
         return
     
     
@@ -302,7 +324,7 @@ class dqn_agent():
         #custom loss function
 
         self.action_model = tf.keras.Sequential()
-        self.action_model.add(tf.keras.Input(shape=(self.observation_sapce_size)))#입력 레이어
+        self.action_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         self.action_model.add(tf.keras.layers.Dense(128, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(16, activation='relu'))
@@ -310,7 +332,7 @@ class dqn_agent():
         self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD())
 
         self.target_model = tf.keras.Sequential()
-        self.target_model.add(tf.keras.Input(shape=(self.observation_sapce_size)))#입력 레이어
+        self.target_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         self.target_model.add(tf.keras.layers.Dense(128, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(16, activation='relu'))
