@@ -127,9 +127,7 @@ class dqn_agent():
         self.get_minibatch_mass()
         train_set = self.get_minibatch_random_sample(self.batch_size)
         self.get_train_set(self.batch_size, *train_set)
-        print(train_set[0].shape)
-        print(train_set[0].shape)
-        print(train_set[0].shape)
+        print("/////////")
         print(train_set[0].shape)
         return Q_value_0
     
@@ -140,8 +138,6 @@ class dqn_agent():
         """
         input : Q_value : type np.array(1, None) 2 demension
         """
-        self.action_space
-        
         if np.random.rand() > epsilon:
             action_index = Q_value.argmax()# 타입 
         else:
@@ -157,10 +153,10 @@ class dqn_agent():
         self.queue_full_tag = 0#0 : not full, 1 : full
         
         queue_length = self.queue_length
-        self.seqeunce_0 = np.empty([self.queue_length, self.observation_sapce_size, self.sequence_length])
-        self.action_0 = np.empty([self.queue_length, 1])
-        self.reward_0 = np.empty([self.queue_length, 1])
-        self.seqeunce_1 = np.empty([queue_length, self.observation_sapce_size, self.sequence_length])
+        self.seqeunce_0 = np.empty([self.queue_length, self.observation_sapce_size, self.sequence_length], dtype = "float64")
+        self.action_0 = np.empty([self.queue_length, 1], dtype = "int64")
+        self.reward_0 = np.empty([self.queue_length, 1], dtype = "float64")
+        self.seqeunce_1 = np.empty([queue_length, self.observation_sapce_size, self.sequence_length], dtype = "float64")
 
     def push_minibatch(self, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
 
@@ -265,26 +261,27 @@ class dqn_agent():
             seqeunce_1_rtn = self.seqeunce_1[index_circle, :, :]
         else:
             raise Exception("out of index")
+        
+        
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
     def get_minibatch_random_sample(self, batch_size):
-        seqeunce_0_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length])
-        action_0_batch_rtn = np.empty([batch_size, 1])
-        reward_0_batch_rtn = np.empty([batch_size, 1])
-        seqeunce_1_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length])
+        seqeunce_0_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length], dtype = "float64")
+        action_0_batch_rtn = np.empty([batch_size, 1], dtype = "int64")
+        reward_0_batch_rtn = np.empty([batch_size, 1], dtype = "float64")
+        seqeunce_1_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length], dtype = "float64")
 
         queue_size = self.get_minibatch_mass()
 
         index = np.random.choice(range(queue_size), batch_size)
         index_list = index.tolist()
-        i = 0
-        for index in index_list:
-            seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch(index)
+        for i in range(batch_size):
+            seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch(index_list[i])
+
             seqeunce_0_batch_rtn[i, :, :] = seqeunce_0_rtn[:, :]
             action_0_batch_rtn[i, :] = action_0_rtn
             reward_0_batch_rtn[i, :] = reward_0_rtn
             seqeunce_1_batch_rtn[i, :, :] = seqeunce_1_rtn[:, :]
-            i+1
 
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
@@ -311,7 +308,6 @@ class dqn_agent():
             print(input_space_action[i, :].shape)
             print(input_space_target[i, :].shape)
             a = input_space_target[i, :]
-            print(a.shape)
             
             
             #y_j = G_j
@@ -338,12 +334,22 @@ class dqn_agent():
             # 다른 action 에 대한 Q_value 들은 reward를 합산하지 못해 밸만 방정식에 어긋난다. 
             # update Q_value only about action_0 
 
-            action_0 = action_0_batch_arg[i]#epsilon-greey and the action what the machine choosed in state_0
-            print(type(action_0))
+            action_0 = action_0_batch_arg[1, 0]#epsilon-greey and the action what the machine choosed in state_0
+            print(type(action_0_batch_arg))
+            print(action_0_batch_arg.shape)
+            print(action_0_batch_arg)
+            print(action_0_batch_arg[0])
+            print(action_0_batch_arg[1])
+            print(action_0_batch_arg[2])
+            print(action_0_batch_arg[3])
+            print(action_0_batch_arg[4])
             print(type(action_1))
+            print(action_1)
+            print(type(action_0))
+            print(action_0)
             Q_value_0[0, action_0] = Q_value_1[0, action_1]
 
-            output_space[i, :] = Q_value_0[:]
+            output_space[i, :] = Q_value_0[0, :]
 
         # 반환하는 결과
         # machine이 겪은 상황 : state_0, machine 이 주어진 상황에서 예측해야할 올바른 Q_value_0
@@ -365,7 +371,7 @@ class dqn_agent():
     def inspect_env(self):
         self.observation_sapce_size = self.env.observation_space._shape[0]
         self.action_space_size = self.env.action_space.n
-        self.action_space = np.array(range(self.action_space_size))
+        self.action_space = np.array(range(self.action_space_size), dtype="int")
 
     def create_nn(self):
         #custom loss function
