@@ -80,7 +80,7 @@ class dqn_agent():
         observation_1_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
         observation_1, info = self.env.reset()
         # print(action_0)
-        for i in range(19):#시나리오의 최대 길이 500/1000 만큼 반복
+        for i in range(20):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
             #state_0  = state_1 다음 상황으로 넘어감.
@@ -100,7 +100,6 @@ class dqn_agent():
             
             self.get_minibatch_mass()
             # if i % C_step == 4:
-                # train_set = self.get_train_set(5)
                 # self.pop_minibatch()               
                 # self.pop_minibatch()               
                 # self.pop_minibatch()               
@@ -108,20 +107,26 @@ class dqn_agent():
                 # self.pop_minibatch()               
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
+        # print("----------")
+        # self.get_minibatch_mass()
+        # print(self.get_minibatch(0))
+        # print("----------")
+        # self.get_minibatch_mass()
+        # print(self.get_minibatch(0))
+        # print("----------")
+        # self.get_minibatch_mass()
+        # print(self.get_minibatch(5))
+        # print("----------")
+        # self.get_minibatch_mass()
+        # print(self.get_minibatch(19))
+        
         print("----------")
         self.get_minibatch_mass()
-        print(self.get_minibatch(0))
-        print("----------")
-        self.get_minibatch_mass()
-        print(self.get_minibatch(0))
-        print("----------")
-        self.get_minibatch_mass()
-        print(self.get_minibatch(5))
-        print("----------")
-        self.get_minibatch_mass()
-        print(self.get_minibatch(19))
-        print("----------")
-        self.get_minibatch_mass()
+        train_set = self.get_minibatch_random_sample(5)
+        print(train_set[0].shape)
+        print(train_set[0].shape)
+        print(train_set[0].shape)
+        print(train_set[0].shape)
         return Q_value_0
     
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
@@ -258,11 +263,11 @@ class dqn_agent():
             raise Exception("out of index")
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
-    def get_train_set(self, batch_size):
-        seqeunce_0_batch_rtn = np.empty(batch_size, self.sequence_length)
-        action_0_batch_rtn = np.empty(batch_size, 1)
-        reward_0_batch_rtn = np.empty(batch_size, 1)
-        seqeunce_1_batch_rtn = np.empty(batch_size, self.sequence_length)
+    def get_minibatch_random_sample(self, batch_size):
+        seqeunce_0_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length])
+        action_0_batch_rtn = np.empty([batch_size, 1])
+        reward_0_batch_rtn = np.empty([batch_size, 1])
+        seqeunce_1_batch_rtn = np.empty([batch_size, self.observation_sapce_size, self.sequence_length])
 
         queue_size = self.get_minibatch_mass()
 
@@ -271,10 +276,10 @@ class dqn_agent():
         i = 0
         for index in index_list:
             seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch(index)
-            seqeunce_0_batch_rtn[i, :] = seqeunce_0_rtn[0, :]
-            action_0_batch_rtn[i, :] = action_0_rtn[0, :]
-            reward_0_batch_rtn[i, :] = reward_0_rtn[1, :]
-            seqeunce_1_batch_rtn[i, :] = seqeunce_1_rtn[1, :]
+            seqeunce_0_batch_rtn[i, :, :] = seqeunce_0_rtn[:, :]
+            action_0_batch_rtn[i, :] = action_0_rtn
+            reward_0_batch_rtn[i, :] = reward_0_rtn
+            seqeunce_1_batch_rtn[i, :, :] = seqeunce_1_rtn[:, :]
             i+1
 
         return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
