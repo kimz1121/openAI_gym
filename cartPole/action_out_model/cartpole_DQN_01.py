@@ -311,14 +311,31 @@ class dqn_agent():
             
             Q_value_1 =  self.target_model.predict(input_space_target[i], verbose = 0)
             action_1 = Q_value_1.argmax()#greedy-action
-            TD_target = Q_value_1[action_1] + reward_0_batch_arg[i]#add reward
+            Q_value_1[action_1] = Q_value_1[action_1] + reward_0_batch_arg[i]#add reward for the action_0
 
             #Loss 
             # = y_j - Q(s_0, a_0 theta) : theta- weight of action network
             Q_value_0 =  self.action_model.predict(input_space_action[i], verbose = 0)
-            action_0 = action_0_batch_arg[i]
-            Q_value_1[action_0]#epsilon-greedy
-            target = 
+            # calc loss for only action_0
+            # by a method shows Q_value which is more exact
+            # 더 정확히 액션 밸류를 평가하기 위해서는, 행동 정책을 통해 reward가 반영된 actoin에 대하여서만 
+            # 액션 밸류를 업데이트 하여야, 밸만 방정식을 더욱 엄밀히 충족한다. 
+            # S_1 상태에서 얻어진 각 action에 대한 Q_value 들의 reward가 action_0 만 존재하기 때문에 
+            # 다른 action 에 대한 Q_value 들은 reward를 합산하지 못해 밸만 방정식에 어긋난다. 
+            # update Q_value only about action_0 
+
+            action_0 = action_0_batch_arg[i]#epsilon-greey and the action what the machine choosed in state_0
+            Q_value_0[action_0] = Q_value_1[action_1]
+
+            output_space[i, :] = Q_value_0[:]
+
+        # 반환하는 결과
+        # machine이 겪은 상황 : state_0, machine 이 주어진 상황에서 예측해야할 올바른 Q_value_0
+        # input_space = state_0
+        # output_space = y_j = Q(s_0, a_0 theta-) # TD-target
+        # y_rediction_of_machine =  Q(s_0, a_0 theta)
+
+        return input_space_action, output_space
 
     def mask_target(self, measure_q, predict_q):
 
