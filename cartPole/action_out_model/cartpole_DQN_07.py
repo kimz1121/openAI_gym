@@ -178,7 +178,7 @@ class dqn_agent():
     
     def reset_minibathch(self):#minibatch
         self.sequence_length = 1
-        self.queue_length = 50
+        self.queue_length = 20
         self.queue_front = 0
         self.queue_rear = 0
         self.queue_full_tag = 0#0 : not full, 1 : full
@@ -429,7 +429,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 100000
-    generation = 2
+    generation = 3
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
