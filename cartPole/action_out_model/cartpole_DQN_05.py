@@ -399,7 +399,7 @@ if __name__ == "__main__":
     agent.create_nn()
     for i in range(100000):
         agent.drive_model()
-        if i%100 == 0:
+        if i%25 == 0:
             agent.save_model(0, i)
 
     env_headless.reset()
