@@ -232,16 +232,16 @@ class dqn_agent():
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
     def get_train_set(self):
-        
+
 
         seqeunce_0_batch_rtn = np.empty()
         action_0_batch_rtn = np.empty()
         reward_0_batch_rtn = np.empty()
         seqeunce_1_batch_rtn = np.empty()
 
-        
-        get_minibatch
-        return
+        seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn = self.get_minibatch()
+
+        return seqeunce_0_batch_rtn, action_0_batch_rtn, reward_0_batch_rtn, seqeunce_1_batch_rtn
     
     def mask_target(self):
         
