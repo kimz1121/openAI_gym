@@ -383,6 +383,10 @@ class dqn_agent():
         self.action_model.save("./model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
         self.target_model.save("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
+    def load_model(self, generation, index):
+        self.action_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
+
 if __name__ == "__main__":
     # env_headless = gym.make("CartPole-v1", render_mode="human")
     # env_screen = gym.make("CartPole-v1")
@@ -393,8 +397,10 @@ if __name__ == "__main__":
 
     agent.set_env(env_screen)
     agent.create_nn()
-    for i in range(1000):
+    for i in range(100000):
         agent.drive_model()
+        if i%100 == 0:
+            agent.save_model(0, i)
 
     env_headless.reset()
     time.sleep(3)
