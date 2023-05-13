@@ -85,7 +85,7 @@ class dqn_agent():
         observation_1_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
         observation_1, info = self.env.reset()
         # print(action_0)
-        for i in range(500):#시나리오의 최대 길이 500/1000 만큼 반복
+        for i in range(1000):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
             #state_0  = state_1 다음 상황으로 넘어감.
@@ -94,28 +94,15 @@ class dqn_agent():
             Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)#Q_value from behaivior policy
             # print(Q_value_0)
             action = self.pick_action(Q_value_0, epsilon=0.1)
-            print("0=================")
-            print(action)
-
-            observation_1, reward, terminated, tuncated, info = self.env.step(action)
+            observation_1, reward, terminated, truncated, info = self.env.step(action)
             #storing to replay buffer
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
-            print("1=================")
-            self.get_minibatch_mass()
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence)
             #sampling from replay buffer
-            self.get_minibatch_mass()
-            s_0, a_0, r_0, s_1 = self.get_minibatch(0)
-            print("2=================")
-            print(a_0)
-            self.get_minibatch_mass()
-
             sample_set = self.get_minibatch_random_sample(self.batch_size)
-            
-            self.get_minibatch_mass()
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
             self.action_model.fit(x_input, y_output, batch_size=self.batch_size, epochs = 2)
@@ -124,7 +111,9 @@ class dqn_agent():
             if i % C_step == 0:#for each C_step
                 self.weights_copy()
 
-                
+            if terminated or truncated == 1:
+                break
+
         # observation, reward, terminated, turncated, info = self.env.step(0)
         # print("----------")
         # self.get_minibatch_mass()
@@ -161,7 +150,7 @@ class dqn_agent():
     
     def reset_minibathch(self):#minibatch
         self.sequence_length = 1
-        self.queue_length = 200
+        self.queue_length = 20
         self.queue_front = 0
         self.queue_rear = 0
         self.queue_full_tag = 0#0 : not full, 1 : full
@@ -241,7 +230,7 @@ class dqn_agent():
 
                 num_of_element = (self.queue_length + self.queue_rear - self.queue_front)%self.queue_length# 개수 새기
         
-        print("{} : {} : {}".format(num_of_element, self.queue_front, self.queue_rear))
+        # print("{} : {} : {}".format(num_of_element, self.queue_front, self.queue_rear))
         return num_of_element
 
 
@@ -337,11 +326,7 @@ class dqn_agent():
             # update Q_value only about action_0 
 
             action_0 = action_0_batch_arg[i, 0]#epsilon-greey and the action what the machine choosed in state_0
-            print(action_0)
-            print(action_1)
-            
             Q_value_0[0, action_0] = Q_value_1[0, action_1]
-
             output_space[i, :] = Q_value_0[0, :]
 
         # 반환하는 결과
@@ -375,7 +360,8 @@ class dqn_agent():
         self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(16, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(self.action_space_size, activation='relu'))#출력 레이어
-        self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD())
+        self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers.legacy.SGD())
+        # self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers..Adam())
 
         self.target_model = tf.keras.Sequential()
         self.target_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
@@ -383,7 +369,8 @@ class dqn_agent():
         self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(16, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(self.action_space_size, activation='relu'))#출력 레이어
-        self.target_model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD())
+        self.target_model.compile(loss='mse', optimizer=tf.keras.optimizers.legacy.SGD())
+        # self.target_model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam())
 
         self.target_model.summary()
 
@@ -392,18 +379,22 @@ class dqn_agent():
     def weights_copy(self):
         self.action_model.set_weights(self.target_model.get_weights())
 
+    def save_model(self, generation, index):
+        self.action_model.save("./model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model.save("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
     # env_headless = gym.make("CartPole-v1", render_mode="human")
     # env_screen = gym.make("CartPole-v1")
-    env_headless = gym.make("LunarLander-v2", render_mode="human")
-    env_screen = gym.make("LunarLander-v2")
+    env_screen = gym.make("LunarLander-v2", render_mode="human")
+    env_headless = gym.make("LunarLander-v2")
 
     agent = dqn_agent(env_screen)
 
     agent.set_env(env_screen)
     agent.create_nn()
-    agent.drive_model()
+    for i in range(1000):
+        agent.drive_model()
 
     env_headless.reset()
     time.sleep(3)
