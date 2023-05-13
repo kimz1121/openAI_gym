@@ -183,11 +183,6 @@ class dqn_agent():
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
     def get_minibatch_mass(self):#num of stored data
-        self.queue_front
-        self.queue_rear
-        self.queue_full_tag
-        self.queue_length
-
         if self.queue_full_tag > 0:
             num_of_element = self.queue_length# 꽉찬 상태
         else:
@@ -200,49 +195,52 @@ class dqn_agent():
                 # else:
                 #     self.queue_rear - self.queue_front
 
-                (self.queue_length + self.queue_rear - self.queue_front)%self.queue_length# 개수 새기
+                num_of_element = (self.queue_length + self.queue_rear - self.queue_front)%self.queue_length# 개수 새기
         return num_of_element
 
 
     def set_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):
         # index = self.batch_counter%self.queue_length
                 # index = self.batch_counter%self.queue_length
-        
-        if self.queue_full_tag == 0:
-            self.queue_rear = (self.queue_rear+1)%self.queue_length
-            index = self.queue_rear
-            if self.queue_front == self.queue_rear:
-                self.queue_full_tag = 1
+        num_of_elements = self.get_minibatch_mass()
 
+        if index < num_of_elements:
+            index_circle = (self.queue_front + index)%self.queue_length
+        
+            self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
+            self.action_0[index, :] = action_0_arg[1, :]
+            self.reward_0[index, :] = reward_0_arg[1, :]
+            self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
+        
         else:
-            #이미 큐가 꽉찬 상태.
-            #큐를 이동하며 기존의 내용을 덮어쓴다.
-            self.queue_rear = (self.queue_rear+1)%self.queue_length
-            self.queue_front = self.queue_rear#
-            index = self.queue_rear
-            self.queue_full_tag = 2
-        
-        self.seqeunce_0[index, :] = seqeunce_0_arg[1, :]
-        self.action_0[index, :] = action_0_arg[1, :]
-        self.reward_0[index, :] = reward_0_arg[1, :]
-        self.seqeunce_1[index, :] = seqeunce_1_arg[1, :]
-        
-    def get_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):            
-        self.queue_length
-        self.batch_counter
+            assert 1, "out of index"
+
+
+    def get_minibatch(self, index, seqeunce_0_arg, action_0_arg, reward_0_arg, seqeunce_1_arg):           
+        num_of_elements = self.get_minibatch_mass()
 
         # index = self.batch_counter%self.queue_length
-        index_circle = self.batch_counter + index
+        if index < num_of_elements:
+            index_circle = (self.queue_front + index)%self.queue_length
         
-        seqeunce_0_rtn = self.seqeunce_0[index, :]
-        action_0_rtn = self.action_0[index, :]
-        reward_0_rtn = self.reward_0[index, :]
-        seqeunce_1_rtn = self.seqeunce_1[index, :]
-
+            seqeunce_0_rtn = self.seqeunce_0[index_circle, :]
+            action_0_rtn = self.action_0[index_circle, :]
+            reward_0_rtn = self.reward_0[index_circle, :]
+            seqeunce_1_rtn = self.seqeunce_1[index_circle, :]
+        else:
+            assert 1, "out of index"
         return seqeunce_0_rtn, action_0_rtn, reward_0_rtn, seqeunce_1_rtn
 
     def get_train_set(self):
         
+
+        seqeunce_0_batch_rtn = np.empty()
+        action_0_batch_rtn = np.empty()
+        reward_0_batch_rtn = np.empty()
+        seqeunce_1_batch_rtn = np.empty()
+
+        
+        get_minibatch
         return
     
     def mask_target(self):
