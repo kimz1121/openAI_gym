@@ -97,7 +97,6 @@ class dqn_agent():
         print("버퍼 초기화 완료")
 
     def drive_model(self):
-        print("drive_model")
         # 각 단계에서의 행동선택
         # ★하나의 액션에 대하여 한정하여  loss를 계산하는 방법은
             # 선택 된 액션 이외의 교사값은 모델의 예측갑을 그대로 전달하여 같게하고, 
@@ -431,7 +430,7 @@ if __name__ == "__main__":
 
     iter_max = 100000
     generation = 1
-    
+
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
         agent.drive_model()
