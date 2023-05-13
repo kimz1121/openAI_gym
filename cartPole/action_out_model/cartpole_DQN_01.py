@@ -80,7 +80,7 @@ class dqn_agent():
         observation_1_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
         observation_1, info = self.env.reset()
         # print(action_0)
-        for i in range(104):#시나리오의 최대 길이 500/1000 만큼 반복
+        for i in range(19):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
             #state_0  = state_1 다음 상황으로 넘어감.
@@ -108,11 +108,19 @@ class dqn_agent():
                 # self.pop_minibatch()               
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
-
+        print("----------")
         self.get_minibatch_mass()
-        self.get_minibatch(0)
+        print(self.get_minibatch(0))
+        print("----------")
         self.get_minibatch_mass()
-        self.get_minibatch(19)
+        print(self.get_minibatch(0))
+        print("----------")
+        self.get_minibatch_mass()
+        print(self.get_minibatch(5))
+        print("----------")
+        self.get_minibatch_mass()
+        print(self.get_minibatch(19))
+        print("----------")
         self.get_minibatch_mass()
         return Q_value_0
     
