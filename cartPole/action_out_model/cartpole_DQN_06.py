@@ -72,7 +72,7 @@ class dqn_agent():
         observation_1, info = self.env.reset()
         iter = self.batch_size*10
         for i in range(iter):
-            print("버퍼 초기화 {:3}% 완료".format(100*round(i/iter)))
+            print("버퍼 초기화 {:3}% 완료".format(round(100*(i/iter))))
             observation_0 = observation_1
             observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
             Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)
