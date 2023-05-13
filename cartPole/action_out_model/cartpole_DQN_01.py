@@ -195,9 +195,12 @@ class dqn_agent():
                 num_of_element = 0
             else:
                 #개수를 직접 새어야 하는 꽉차지도 텅비지고 않은 상태
-                
+                # if self.queue_rear > self.queue_front:
+                #     (self.queue_length + self.queue_rear - self.queue_front)%self.queue_length
+                # else:
+                #     self.queue_rear - self.queue_front
 
-
+                (self.queue_length + self.queue_rear - self.queue_front)%self.queue_length# 개수 새기
         return num_of_element
 
 
