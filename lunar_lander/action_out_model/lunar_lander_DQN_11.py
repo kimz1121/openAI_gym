@@ -56,7 +56,7 @@ class dqn_agent():
 
     batch_size = 5
     sequence_length = 1
-    queue_length = 30
+    queue_length = 500
 
     def __init__(self, env_arg):
         C_step_counter = 0
@@ -414,14 +414,14 @@ class dqn_agent():
 
     def weights_copy(self):
         self.action_model.set_weights(self.target_model.get_weights())
-
+        
     def save_model(self, generation, index):
-        self.action_model.save("./model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model.save("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
+        self.action_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
     def load_model(self, generation, index):
-        self.action_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
+        self.action_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
     # env_screen = gym.make("CartPole-v1", render_mode="human")
