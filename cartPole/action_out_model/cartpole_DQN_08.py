@@ -148,9 +148,9 @@ class dqn_agent():
             
             self.get_minibatch_mass()
             
-            C_step_counter + 1
-            if C_step_counter % C_step == 0:#for each C_step
-                C_step_counter = 0
+            self.C_step_counter + 1
+            if self.C_step_counter % C_step == 0:#for each C_step
+                self.C_step_counter = 0
                 self.weights_copy()
 
             if terminated or truncated == 1:
