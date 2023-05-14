@@ -400,7 +400,7 @@ if __name__ == "__main__":
     for i in range(100000):
         agent.drive_model()
         if i%25 == 0:
-            agent.save_model(10, i)
+            agent.save_model(14, i)
 
     env_headless.reset()
     time.sleep(3)
