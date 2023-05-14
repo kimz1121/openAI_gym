@@ -48,15 +48,15 @@ class dqn_agent():
     action_space = 0
 
     #train hyperparameter
-    gamma = 0.99
+    gamma = 0.9
     epsilon = 0.1
 
     C_step_counter = 0
-    C_step = 500
+    C_step = 50
 
-    batch_size = 50
+    batch_size = 5
     sequence_length = 1
-    queue_length = 50
+    queue_length = 10
 
     def __init__(self, env_arg):
         C_step_counter = 0
@@ -134,6 +134,9 @@ class dqn_agent():
             # print(Q_value_0)
             action = self.pick_action(Q_value_0, epsilon=0.1)
             observation_1, reward, terminated, truncated, info = self.env.step(action)
+            if terminated == 1:
+                reward = -10
+
             #storing to replay buffer
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
             observation_0_sequence[:, 0] = observation_0
@@ -144,16 +147,17 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=10, epochs = 2, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=10, epochs = 1, verbose=0)
             
             self.get_minibatch_mass()
             
             self.C_step_counter += 1
             if self.C_step_counter % C_step == 0:#for each C_step
+                print("copy!!")
                 self.C_step_counter = 0
                 self.weights_copy()
 
-            if terminated or truncated == 1:
+            if terminated or truncated == 1:                    
                 break
 
         # observation, reward, terminated, turncated, info = self.env.step(0)
