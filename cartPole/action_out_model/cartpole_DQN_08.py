@@ -436,7 +436,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 7
+    generation = 8
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
