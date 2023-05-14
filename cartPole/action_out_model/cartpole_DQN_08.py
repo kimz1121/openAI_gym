@@ -52,11 +52,11 @@ class dqn_agent():
     epsilon = 0.1
 
     C_step_counter = 0
-    C_step = 50
+    C_step = 500
 
     batch_size = 20
     sequence_length = 1
-    queue_length = 500
+    queue_length = 50
 
     def __init__(self, env_arg):
         C_step_counter = 0
@@ -144,7 +144,7 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=5, epochs = 1, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=10, epochs = 2, verbose=0)
             
             self.get_minibatch_mass()
             
