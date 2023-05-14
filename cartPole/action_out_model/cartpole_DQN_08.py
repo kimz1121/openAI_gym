@@ -423,8 +423,8 @@ class dqn_agent():
         self.target_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
-    env_headless = gym.make("CartPole-v1", render_mode="human")
-    env_screen = gym.make("CartPole-v1")
+    env_screen = gym.make("CartPole-v1", render_mode="human")
+    env_headless = gym.make("CartPole-v1")
     # env_screen = gym.make("LunarLander-v2", render_mode="human")
     # env_headless = gym.make("LunarLander-v2")
 
