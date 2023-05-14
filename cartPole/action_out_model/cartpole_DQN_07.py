@@ -46,12 +46,15 @@ class dqn_agent():
     observation_sapce_size = 0
     action_space_size = 0
     action_space = 0
-    batch_size = 5
 
     #train hyperparameter
     gamma = 0.99
     epsilon = 0.1
     C_step = 20
+
+    batch_size = 20
+    sequence_length = 1
+    queue_length = 500
 
     def __init__(self, env_arg):
         self.set_env(env_arg)
@@ -76,7 +79,7 @@ class dqn_agent():
             observation_0 = observation_1
             observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
             Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)
-            action = self.pick_action(Q_value_0, epsilon=0.1)
+            action = self.pick_action(Q_value_0, epsilon=1)#완전한 무작위
             observation_1, reward, terminated, truncated, info = self.env.step(action)
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
@@ -138,7 +141,7 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=self.batch_size, epochs = 2, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=5, epochs = 1, verbose=0)
 
             self.get_minibatch_mass()
             if i % C_step == 0:#for each C_step
@@ -177,12 +180,10 @@ class dqn_agent():
         return action
     
     def reset_minibathch(self):#minibatch
-        self.sequence_length = 1
-        self.queue_length = 20
         self.queue_front = 0
         self.queue_rear = 0
         self.queue_full_tag = 0#0 : not full, 1 : full
-        
+
         queue_length = self.queue_length
         self.seqeunce_0 = np.empty([self.queue_length, self.observation_sapce_size, self.sequence_length], dtype = "float64")
         self.action_0 = np.empty([self.queue_length, 1], dtype = "int64")
@@ -428,8 +429,8 @@ if __name__ == "__main__":
     agent.create_nn()
     agent.drive_queue_init()
 
-    iter_max = 100000
-    generation = 3
+    iter_max = 1000000
+    generation = 7
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
