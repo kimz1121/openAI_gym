@@ -52,11 +52,11 @@ class dqn_agent():
     epsilon = 0.1
 
     C_step_counter = 0
-    C_step = 50
+    C_step = 250
 
-    batch_size = 5
+    batch_size = 15
     sequence_length = 1
-    queue_length = 10
+    queue_length = 30
 
     def __init__(self, env_arg):
         C_step_counter = 0
@@ -424,10 +424,10 @@ class dqn_agent():
         self.target_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
-    env_screen = gym.make("CartPole-v1", render_mode="human")
-    env_headless = gym.make("CartPole-v1")
-    # env_screen = gym.make("LunarLander-v2", render_mode="human")
-    # env_headless = gym.make("LunarLander-v2")
+    # env_screen = gym.make("CartPole-v1", render_mode="human")
+    # env_headless = gym.make("CartPole-v1")
+    env_screen = gym.make("LunarLander-v2", render_mode="human")
+    env_headless = gym.make("LunarLander-v2")
 
 
     agent = dqn_agent(env_screen)
