@@ -344,14 +344,14 @@ class dqn_agent():
             # = r_j + G_j+1
             # = r_j + Q(s_1, a_1 theta-) : theta- weight of target network
             
-            Q_value_1 =  self.target_model.predict(input_space_target[i, :].reshape([1, 8]), verbose = 0)
+            Q_value_1 =  self.target_model.predict(input_space_target[i, :].reshape([1, self.observation_sapce_size]), verbose = 0)
             action_1 = Q_value_1.argmax()#greedy-action
 
             Q_value_1[0, action_1] = Q_value_1[0, action_1] + reward_0_batch_arg[i]#add reward for the action_0
 
             #Loss 
             # = y_j - Q(s_0, a_0 theta) : theta- weight of action network
-            Q_value_0 =  self.action_model.predict(input_space_action[i, :].reshape([1, 8]), verbose = 0)
+            Q_value_0 =  self.action_model.predict(input_space_action[i, :].reshape([1, self.observation_sapce_size]), verbose = 0)
             # calc loss for only action_0
             # by a method shows Q_value which is more exact
             # 더 정확히 액션 밸류를 평가하기 위해서는, 행동 정책을 통해 reward가 반영된 actoin에 대하여서만 
@@ -423,10 +423,10 @@ class dqn_agent():
         self.target_model = keras.models.load_model("./model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
-    # env_headless = gym.make("CartPole-v1", render_mode="human")
-    # env_screen = gym.make("CartPole-v1")
-    env_screen = gym.make("LunarLander-v2", render_mode="human")
-    env_headless = gym.make("LunarLander-v2")
+    env_headless = gym.make("CartPole-v1", render_mode="human")
+    env_screen = gym.make("CartPole-v1")
+    # env_screen = gym.make("LunarLander-v2", render_mode="human")
+    # env_headless = gym.make("LunarLander-v2")
 
 
     agent = dqn_agent(env_screen)
@@ -436,7 +436,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 8
+    generation = 9
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
