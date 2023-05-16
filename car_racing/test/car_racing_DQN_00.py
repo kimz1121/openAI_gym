@@ -401,7 +401,7 @@ class dqn_agent():
     
     def inspect_env(self):
         self.observation_sapce_size = self.env.observation_space._shape[0]
-        self.action_space_size = self.env.action_space.n
+        self.action_space_size = self.env.action_space._shape[0]
         self.action_space = np.array(range(self.action_space_size), dtype="int")
 
     def create_nn(self):
@@ -410,8 +410,8 @@ class dqn_agent():
         self.action_model = tf.keras.Sequential()
         self.action_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         # self.action_model.add(tf.keras.layers.Dense(128, activation='relu'))
-        self.action_model.add(tf.keras.layers.Conv2D(64, (9, 9), activation='relu'))
-        self.action_model.add(tf.keras.layers.MaxPool2D((5, 5)))
+        self.action_model.add(tf.keras.layers.Conv3D(64, (9, 9, 3), activation='relu'))
+        self.action_model.add(tf.keras.layers.MaxPool3D((5, 5, 3)))
         self.action_model.add(tf.keras.layers.Flatten())
         self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
@@ -426,8 +426,8 @@ class dqn_agent():
         self.target_model = tf.keras.Sequential()
         self.target_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         # self.target_model.add(tf.keras.layers.Dense(128, activation='relu'))
-        self.target_model.add(tf.keras.layers.Conv2D(64, (9, 9), activation='relu'))
-        self.target_model.add(tf.keras.layers.MaxPool2D((5, 5)))
+        self.target_model.add(tf.keras.layers.Conv3D(64, (9, 9, 3), activation='relu'))
+        self.target_model.add(tf.keras.layers.MaxPool3D((5, 5, 3)))
         self.target_model.add(tf.keras.layers.Flatten())
         self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
@@ -448,12 +448,12 @@ class dqn_agent():
         self.action_model.set_weights(self.target_model.get_weights())
         
     def save_model(self, generation, index):
-        self.action_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
+        self.action_model.save("D:/ksw_coding/python/openAI_gym/model/CarRacing-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model.save("D:/ksw_coding/python/openAI_gym/model/CarRacing-v2/genetation-{}/target_{}.h5".format(generation, index))
 
     def load_model(self, generation, index):
-        self.action_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.action_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/CarRacing-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/CarRacing-v2/genetation-{}/action_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
     # env_screen = gym.make("CartPole-v1", render_mode="human")
