@@ -50,12 +50,12 @@ class dqn_agent():
     #train hyperparameter
     gamma = 0.99
     epsilon = 0.1
-    alpha = 0.9
+    alpha = 0
 
     C_step_counter = 0
-    C_step = 25
+    C_step = 100
 
-    batch_size = 50
+    batch_size = 5
     sequence_length = 1
     queue_length = 10000
 
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 22
+    generation = 25
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
