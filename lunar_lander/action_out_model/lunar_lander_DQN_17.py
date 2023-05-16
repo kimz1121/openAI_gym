@@ -54,7 +54,7 @@ class dqn_agent():
     C_step_counter = 0
     C_step = 25
 
-    batch_size = 20
+    batch_size = 10
     sequence_length = 1
     queue_length = 10000
 
@@ -450,7 +450,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 17
+    generation = 18
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))
