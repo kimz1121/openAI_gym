@@ -48,14 +48,14 @@ class dqn_agent():
     action_space = 0
 
     #train hyperparameter
-    gamma = 0.99
+    gamma = 0.995
     epsilon = 0.1
     alpha = 0.9
 
     C_step_counter = 0
-    C_step = 10000
+    C_step = 25
 
-    batch_size = 5
+    batch_size = 25
     sequence_length = 1
     queue_length = 10000
 
@@ -148,7 +148,7 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=1, epochs = 1, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=25, epochs = 1, verbose=0)
             
             self.get_minibatch_mass()
             
@@ -410,9 +410,9 @@ class dqn_agent():
         self.action_model = tf.keras.Sequential()
         self.action_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         # self.action_model.add(tf.keras.layers.Dense(128, activation='relu'))
-        self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
-        self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
-        self.action_model.add(tf.keras.layers.Dense(64, activation='relu'))
+        self.action_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
+        self.action_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
+        self.action_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
         # self.action_model.add(tf.keras.layers.Dense(16, activation='relu'))
         self.action_model.add(tf.keras.layers.Dense(self.action_space_size, activation='linear'))#출력 레이어
         # self.action_model.compile(loss='mse', optimizer=tf.keras.optimizers.legacy.SGD())
@@ -423,9 +423,9 @@ class dqn_agent():
         self.target_model = tf.keras.Sequential()
         self.target_model.add(tf.keras.Input(shape=(self.observation_sapce_size*self.sequence_length)))#입력 레이어
         # self.target_model.add(tf.keras.layers.Dense(128, activation='relu'))
-        self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
-        self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
-        self.target_model.add(tf.keras.layers.Dense(64, activation='relu'))
+        self.target_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
+        self.target_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
+        self.target_model.add(tf.keras.layers.Dense(64, activation='sigmoid'))
         # self.target_model.add(tf.keras.layers.Dense(16, activation='relu'))
         self.target_model.add(tf.keras.layers.Dense(self.action_space_size, activation='linear'))#출력 레이어
         # self.target_model.compile(loss='mse', optimizer=tf.keras.optimizers.legacy.SGD())

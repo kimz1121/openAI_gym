@@ -50,10 +50,10 @@ class dqn_agent():
     #train hyperparameter
     gamma = 0.99
     epsilon = 0.1
-    alpha = 0.9
+    alpha = 0
 
     C_step_counter = 0
-    C_step = 10000
+    C_step = 100
 
     batch_size = 5
     sequence_length = 1
@@ -148,7 +148,7 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=1, epochs = 1, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=10, epochs = 1, verbose=0)
             
             self.get_minibatch_mass()
             
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 26
+    generation = 27
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))

@@ -55,7 +55,7 @@ class dqn_agent():
     C_step_counter = 0
     C_step = 10000
 
-    batch_size = 5
+    batch_size = 20
     sequence_length = 1
     queue_length = 10000
 
@@ -148,13 +148,13 @@ class dqn_agent():
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=1, epochs = 1, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=5, epochs = 1, verbose=0)
             
             self.get_minibatch_mass()
             
             self.C_step_counter += 1
             if self.C_step_counter % C_step == 0:#for each C_step
-                # print("copy!!")
+                print("copy!!")
                 self.C_step_counter = 0
                 self.weights_copy()
 
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 26
+    generation = 28
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))

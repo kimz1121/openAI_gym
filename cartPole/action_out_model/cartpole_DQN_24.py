@@ -50,12 +50,12 @@ class dqn_agent():
     #train hyperparameter
     gamma = 0.99
     epsilon = 0.1
-    alpha = 0.9
+    alpha = 0
 
     C_step_counter = 0
-    C_step = 10000
+    C_step = 1
 
-    batch_size = 5
+    batch_size = 10
     sequence_length = 1
     queue_length = 10000
 
@@ -88,6 +88,9 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
+            if terminated == 1:
+                reward = -5
+
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             
             # 단순 버퍼 초기화가 목적이므로 학습은 진행하지 않음
@@ -143,12 +146,15 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
+            if terminated == 1:
+                reward = -5
+            
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
             sample_set = self.get_minibatch_random_sample(self.batch_size)
             x_input, y_output = self.get_train_set(self.batch_size, *sample_set)#* 언패킹 대상은 s_0, a_0, r_0 s_1 이다.
         
-            self.action_model.fit(x_input, y_output, batch_size=1, epochs = 1, verbose=0)
+            self.action_model.fit(x_input, y_output, batch_size=10, epochs = 1, verbose=0)
             
             self.get_minibatch_mass()
             
@@ -442,18 +448,18 @@ class dqn_agent():
         self.action_model.set_weights(self.target_model.get_weights())
         
     def save_model(self, generation, index):
-        self.action_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/target_{}.h5".format(generation, index))
+        self.action_model.save("D:/ksw_coding/python/openAI_gym/model/CartPole-v1/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model.save("D:/ksw_coding/python/openAI_gym/model/CartPole-v1/genetation-{}/target_{}.h5".format(generation, index))
 
     def load_model(self, generation, index):
-        self.action_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
-        self.target_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
+        self.action_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/CartPole-v1/genetation-{}/action_{}.h5".format(generation, index))
+        self.target_model = keras.models.load_model("D:/ksw_coding/python/openAI_gym/model/CartPole-v1/genetation-{}/action_{}.h5".format(generation, index))
 
 if __name__ == "__main__":
-    # env_screen = gym.make("CartPole-v1", render_mode="human")
-    # env_headless = gym.make("CartPole-v1")
-    env_screen = gym.make("LunarLander-v2", render_mode="human")
-    env_headless = gym.make("LunarLander-v2")
+    env_screen = gym.make("CartPole-v1", render_mode="human")
+    env_headless = gym.make("CartPole-v1")
+    # env_screen = gym.make("LunarLander-v2", render_mode="human")
+    # env_headless = gym.make("LunarLander-v2")
 
 
     agent = dqn_agent(env_screen)
@@ -463,7 +469,7 @@ if __name__ == "__main__":
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 26
+    generation = 24
 
     for i in range(iter_max):
         print("iter : {:10}/{}".format(i, iter_max))

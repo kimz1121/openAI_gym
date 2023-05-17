@@ -50,10 +50,11 @@ class dqn_agent():
     #train hyperparameter
     gamma = 0.99
     epsilon = 0.1
-    alpha = 0.9
+    alpha = 0
 
     C_step_counter = 0
-    C_step = 10000
+    C_step = 10
+    tau = 0.001
 
     batch_size = 5
     sequence_length = 1
@@ -88,6 +89,9 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
+            if terminated == 1:
+                reward = -5
+
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             
             # 단순 버퍼 초기화가 목적이므로 학습은 진행하지 않음
@@ -143,6 +147,9 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
+            if terminated == 1:
+                reward = -5
+            
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
             sample_set = self.get_minibatch_random_sample(self.batch_size)
@@ -159,24 +166,10 @@ class dqn_agent():
                 self.weights_copy()
 
             if terminated or truncated == 1:
-                print("reward_total : {}".format(reward_sum))
+                # print("reward_total : {}".format(reward_sum))
                 break
 
-        # observation, reward, terminated, turncated, info = self.env.step(0)
-        # print("----------")
-        # self.get_minibatch_mass()
-        # print(self.get_minibatch(0))
-        # print("----------")
-        # self.get_minibatch_mass()
-        # print(self.get_minibatch(0))
-        # print("----------")
-        # self.get_minibatch_mass()
-        # print(self.get_minibatch(5))
-        # print("----------")
-        # self.get_minibatch_mass()
-        # print(self.get_minibatch(19))
-
-    
+        return reward_sum
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
     #     return
 
@@ -439,7 +432,19 @@ class dqn_agent():
         self.action_model.set_weights(self.target_model.get_weights())
 
     def weights_copy(self):
-        self.action_model.set_weights(self.target_model.get_weights())
+        target_weights = self.target_model.get_weights()
+        action_weights = self.action_model.get_weights()
+
+        # print(len(target_weights))
+        update_weights = [None]*len(target_weights)
+        for i in range(len(target_weights)):
+            # print(type(target_weights[i]))
+            # print(target_weights[i].shape)
+
+            update_weights[i] = self.tau*target_weights[i] + (1 - self.tau)*action_weights[i]
+
+
+        self.action_model.set_weights(update_weights)
         
     def save_model(self, generation, index):
         self.action_model.save("D:/ksw_coding/python/openAI_gym/model/lunarlander-v2/genetation-{}/action_{}.h5".format(generation, index))
@@ -457,25 +462,28 @@ if __name__ == "__main__":
 
 
     agent = dqn_agent(env_screen)
-
     agent.set_env(env_headless)
     agent.create_nn()
+    
+    agent.weights_copy()
+
     agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 26
+    generation = 34
 
     for i in range(iter_max):
-        print("iter : {:10}/{}".format(i, iter_max))
         if i%10 == 0:
             agent.set_env(env_screen)
         else:
             agent.set_env(env_headless)
 
-        agent.drive_model()
+        reward_sum = agent.drive_model()
 
         if i%25 == 0:
             agent.save_model(generation, i)
+
+        print("iter : {:10}/{}  || reward_sum {}".format(i, iter_max, reward_sum))
 
     env_headless.reset()
     time.sleep(3)
