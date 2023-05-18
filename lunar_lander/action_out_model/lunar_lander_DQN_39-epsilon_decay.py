@@ -535,7 +535,7 @@ if __name__ == "__main__":
         reward_list.append(reward_sum)
 
         reward_mean = sum(reward_list)/len(reward_list)
-        print("iter : {:10}/{}  || R_sum {:5.3f} || R_mean {:5.3f}".format(i, iter_max, reward_sum, reward_mean))
+        print("iter : {:5}/{}  | R_sum {:5.3f} | R_mean {:5.3f} | eps {}".format(i, iter_max, reward_sum, reward_mean, agent.epsilon))
 
         if i%25 == 0:
             agent.save_model(generation, i)
