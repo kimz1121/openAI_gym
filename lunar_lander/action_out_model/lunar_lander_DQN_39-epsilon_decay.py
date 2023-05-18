@@ -145,7 +145,7 @@ class dqn_agent():
         observation_1, info = self.env.reset()
         # print(action_0)
         reward_sum = 0
-        for i in range(1000):#시나리오의 최대 길이 500/1000 만큼 반복
+        for i in range(1500):#시나리오의 최대 길이 500/1000 만큼 반복
         # 반복 상태 
         # 필요 요소, RSA
             #state_0  = state_1 다음 상황으로 넘어감.
