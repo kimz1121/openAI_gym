@@ -181,7 +181,7 @@ class dqn_agent():
                 # print("reward_total : {}".format(reward_sum))
                 break
 
-            self.do_epsilon_decay()
+        self.do_epsilon_decay()
 
         return reward_sum
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
