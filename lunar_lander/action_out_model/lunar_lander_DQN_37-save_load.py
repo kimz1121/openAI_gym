@@ -524,7 +524,7 @@ if __name__ == "__main__":
     #         break
     
     agent.set_env(env_screen)
-    agent.load_model(39, 1569)
+    agent.load_model(40, 3990)
     for i in range(100):
         agent.drive_model_saved()
         
