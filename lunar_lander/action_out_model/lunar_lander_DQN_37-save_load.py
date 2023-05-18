@@ -183,7 +183,7 @@ class dqn_agent():
             observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
             Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)#Q_value from behaivior policy
             # print(Q_value_0)
-            action = self.pick_action(Q_value_0, epsilon=0.1)
+            action = self.pick_action(Q_value_0, epsilon=0)
             observation_1, reward, terminated, truncated, info = self.env.step(action)
             #calc reward_sum
             reward_sum += reward
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     #         break
     
     agent.set_env(env_screen)
-    agent.load_model(36, 2600)
+    agent.load_model(39, 1569)
     for i in range(100):
         agent.drive_model_saved()
         
