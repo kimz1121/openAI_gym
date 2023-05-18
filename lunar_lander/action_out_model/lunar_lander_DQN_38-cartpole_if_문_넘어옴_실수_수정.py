@@ -88,9 +88,6 @@ class dqn_agent():
             observation_1, reward, terminated, truncated, info = self.env.step(action)
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
-            
-            if terminated == 1:
-                reward = -5
 
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             
@@ -146,7 +143,7 @@ class dqn_agent():
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
-            
+
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
             sample_set = self.get_minibatch_random_sample(self.batch_size)
@@ -169,6 +166,36 @@ class dqn_agent():
         return reward_sum
     # def get_model(self, model_arg): # model 의 생성과 관리는 클래스 내부에서 처리.
     #     return
+
+    def drive_model_saved(self):        
+        # 학습 없이 구동만.
+        observation_0_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
+        observation_1_sequence = np.empty([self.observation_sapce_size, self.sequence_length])
+        observation_1, info = self.env.reset()
+        # print(action_0)
+        reward_sum = 0
+        for i in range(1000):#시나리오의 최대 길이 500/1000 만큼 반복
+        # 반복 상태 
+        # 필요 요소, RSA
+            #state_0  = state_1 다음 상황으로 넘어감.
+            observation_0 = observation_1
+            observation_0_input = observation_0.reshape([1, self.observation_sapce_size])
+            Q_value_0 =  self.action_model.predict(observation_0_input, verbose = 0)#Q_value from behaivior policy
+            # print(Q_value_0)
+            action = self.pick_action(Q_value_0, epsilon=0.1)
+            observation_1, reward, terminated, truncated, info = self.env.step(action)
+            #calc reward_sum
+            reward_sum += reward
+            #storing to replay buffer
+            # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
+            observation_0_sequence[:, 0] = observation_0
+            observation_1_sequence[:, 0] = observation_1
+            
+            if terminated or truncated == 1:
+                # print("reward_total : {}".format(reward_sum))
+                break
+
+        return reward_sum
 
     def pick_action(self, Q_value, epsilon):
         """

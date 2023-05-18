@@ -147,6 +147,9 @@ class dqn_agent():
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
             
+            if terminated == 1:
+                reward = -5
+
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
             sample_set = self.get_minibatch_random_sample(self.batch_size)

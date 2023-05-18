@@ -88,9 +88,6 @@ class dqn_agent():
             observation_1, reward, terminated, truncated, info = self.env.step(action)
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
-            
-            if terminated == 1:
-                reward = -5
 
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             
@@ -146,7 +143,6 @@ class dqn_agent():
             # 저장 요소 : SARS 4가질로 충분, 이유는 a_t1은 s_t1 으로 부터 유도 가능.
             observation_0_sequence[:, 0] = observation_0
             observation_1_sequence[:, 0] = observation_1
-
 
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
