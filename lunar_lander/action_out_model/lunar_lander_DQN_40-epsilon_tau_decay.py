@@ -539,10 +539,10 @@ if __name__ == "__main__":
 
     reward_list = []
     for i in range(iter_max):
-        if i%10 == 0:
-            agent.set_env(env_screen)
-        else:
-            agent.set_env(env_headless)
+        # if i%10 == 0:
+        #     agent.set_env(env_screen)
+        # else:
+        #     agent.set_env(env_headless)
 
         reward_sum = agent.drive_model()
 
