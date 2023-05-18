@@ -521,8 +521,10 @@ if __name__ == "__main__":
             print("leaning complete")
             break
 
-
-        
+    # agent.set_env(env_screen)
+    # agent.load_model(36, 2600)
+    # for i in range(100):
+    #     agent.drive_model_saved()
 
     env_headless.reset()
     time.sleep(3)
