@@ -507,11 +507,15 @@ if __name__ == "__main__":
 
     agent = dqn_agent(env_screen)
     agent.set_env(env_headless)
+    
+    agent.set_hyper_parameter(gamma=0.99, epsilon=0.1, alpha=0, tau=0.001, C_step=1)
+    agent.set_epslion_decay(epsilon_decay=0.995, epsilon_min=0.001)
+    
     agent.create_nn()
     
     agent.weights_copy()
 
-    agent.drive_queue_init()
+    # agent.drive_queue_init()
 
     iter_max = 1000000
     generation = 39
