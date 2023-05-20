@@ -108,7 +108,7 @@ class dqn_agent():
             observation_1_sequence[:, 0] = observation_1
             
             if terminated == 1:
-                reward = -50
+                reward = -10
 
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             
@@ -166,7 +166,7 @@ class dqn_agent():
             observation_1_sequence[:, 0] = observation_1
             
             if terminated == 1:
-                reward = -50
+                reward = -10
 
             self.push_minibatch(observation_0_sequence, action, reward, observation_1_sequence, terminated)
             #sampling from replay buffer
@@ -514,8 +514,8 @@ if __name__ == "__main__":
     agent = dqn_agent(env_screen)
     agent.set_env(env_headless)
     
-    agent.set_hyper_parameter(gamma=0.99, epsilon=1, alpha=0, tau=0.00005, C_step=5)
-    agent.set_epslion_decay(epsilon_decay=0.999, epsilon_min=0.1)
+    agent.set_hyper_parameter(gamma=0.99, epsilon=1, alpha=0, tau=0.01, C_step=1)
+    agent.set_epslion_decay(epsilon_decay=0.995, epsilon_min=0.1)
     
     agent.create_nn()
     
@@ -524,37 +524,37 @@ if __name__ == "__main__":
     # agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 40
+    generation = 39
 
 
-    reward_list = []
-    for i in range(iter_max):
-        if i%10 == 0:
-            agent.set_env(env_screen)
-        else:
-            agent.set_env(env_headless)
+    # reward_list = []
+    # for i in range(iter_max):
+    #     # if i%10 == 0:
+    #     #     agent.set_env(env_screen)
+    #     # else:
+    #     #     agent.set_env(env_headless)
 
-        reward_sum = agent.drive_model()
+    #     reward_sum = agent.drive_model()
 
-        if len(reward_list) >= 50:
-            reward_list.pop(0)
-        reward_list.append(reward_sum)
+    #     if len(reward_list) >= 25:
+    #         reward_list.pop(0)
+    #     reward_list.append(reward_sum)
 
-        reward_mean = sum(reward_list)/len(reward_list)
-        print("iter : {:5}/{}  | R_sum {:5.3f} | R_mean {:5.3f} | eps {:5.3f}".format(i, iter_max, reward_sum, reward_mean, agent.epsilon))
+    #     reward_mean = sum(reward_list)/len(reward_list)
+    #     print("iter : {:5}/{}  | R_sum {:5.3f} | R_mean {:5.3f} | eps {:5.3f}".format(i, iter_max, reward_sum, reward_mean, agent.epsilon))
 
-        if i%25 == 0:
-            agent.save_model(generation, i)
+    #     if i%25 == 0:
+    #         agent.save_model(generation, i)
 
-        if reward_mean >= 450:
-            agent.save_model(generation, i)
-            print("leaning complete")
-            break
+    #     if reward_mean >= 450:
+    #         agent.save_model(generation, i)
+    #         print("leaning complete")
+    #         break
 
-    # agent.set_env(env_screen)
-    # agent.load_model(36, 2600)
-    # for i in range(100):
-    #     agent.drive_model_saved()
+    agent.set_env(env_screen)
+    agent.load_model(40, 850)
+    for i in range(100):
+        agent.drive_model_saved()
 
     env_headless.reset()
     time.sleep(3)
