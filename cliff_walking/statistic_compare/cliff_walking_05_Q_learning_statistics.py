@@ -20,9 +20,8 @@ class Agent:
     def put_gym_env(self, env_arg: gym.Env):
         self.env = env_arg
 
-
-    def drive_sarsa_random(self):
-        
+    def reset_Q_talbel(self):
+        Q_table = np.zeros((12, 4, 4))
         return
     
     def drive_sarsa_mean_tabel(self, epsilon_arg):
@@ -49,8 +48,8 @@ class Agent:
             if terminated or turncated:
                 if terminated:
                     reward = 1000
-                print("===========================")
-                print(reward)
+                # print("===========================")
+                # print(reward)
                 Q_value_bellman = reward
             else:
                 Q_value_bellman = reward + gamma*Q_value_1_mean
@@ -78,9 +77,9 @@ class Agent:
         
             i = i+1
 
-        print("total steps : {}".format(i))
+        # print("total steps : {}".format(i))
 
-        return
+        return i
 
     def drive_sarsa_tabel(self, epsilon_arg):
         ation_value_temp = np.empty(4)
@@ -107,8 +106,8 @@ class Agent:
             if terminated or turncated:
                 if terminated:
                     reward = 1000
-                print("===========================")
-                print(reward)
+                # print("===========================")
+                # print(reward)
                 Q_value_bellman = reward
             else:
                 Q_value_bellman = reward + gamma*Q_value_1
@@ -136,9 +135,9 @@ class Agent:
         
             i = i+1
 
-        print("total steps : {}".format(i))
+        # print("total steps : {}".format(i))
 
-        return
+        return i
     
     def drive_Q_tabel(self, epsilon_arg):
         ation_value_temp = np.empty(4)
@@ -167,8 +166,8 @@ class Agent:
             if terminated or turncated:
                 if terminated:
                     reward = 1000
-                print("===========================")
-                print(reward)
+                # print("===========================")
+                # print(reward)
                 Q_value_bellman = reward
             else:
                 Q_value_bellman = reward + gamma*Q_value_1_max
@@ -196,9 +195,9 @@ class Agent:
         
             i = i+1
 
-        print("total steps : {}".format(i))
+        # print("total steps : {}".format(i))
 
-        return
+        return i
 
     def drive_by_key(self):
         
@@ -344,23 +343,30 @@ if __name__ == "__main__":
     agent = Agent()
 
     agent.put_gym_env(env_headless)
-    # agent.drive_Q_tabel(1)e
-    for i in range(10000):
-        print("generation : {}".format(i))
-        agent.drive_Q_tabel(0.1)
-    
-    agent.put_gym_env(env_screen)
-    for i in range(100):
-        agent.drive_Q_tabel(0)
 
+    statistic = []
+    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:#학습 수준 변화
+        agent.reset_Q_talbel()
+        for j in range(10):# 개별 사례 10 회 반복
+            for k in range(i*100):#학습 반복
+                if k%100 == 0:
+                    print("generation : {}, iter : {:5}/{:5}".format(j, k, i*100))
+                agent.drive_Q_tabel(0.1)
+                # agent.drive_sarsa_tabel(0.1)
+            total_step_list = []
+            for l in range(10):
+                total_step = agent.drive_Q_tabel(0)
+                # total_step = agent.drive_sarsa_tabel(0)
+                total_step_list.append(total_step)
+        step_mean = sum(total_step_list)/len(total_step_list)
+        statistic.append(step_mean)
 
-
-    print("++++++++++++++++++++++++")
-    env_screen.reset()
-    time.sleep(3)
-    for i in range(1000):
-        agent.drive_by_key()
-    print("++++++++++++++++++++++++")
+    print(statistic)
+            
+        
+    # agent.put_gym_env(env_screen)
+    # for i in range(100):
+    #     agent.drive_sarsa_tabel(0)
 
     time.sleep(3)
 

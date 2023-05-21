@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     agent.put_gym_env(env_headless)
     agent.drive_sarsa_tabel(1)
-    for i in range(100):
+    for i in range(10000):
         print("generation : {}".format(i))
         agent.drive_sarsa_tabel(0.1)
     
