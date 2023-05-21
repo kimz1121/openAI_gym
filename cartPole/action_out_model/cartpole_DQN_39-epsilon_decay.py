@@ -60,7 +60,7 @@ class dqn_agent():
 
     batch_size = 5
     sequence_length = 1
-    queue_length = 10000
+    queue_length = 5
 
     def __init__(self, env_arg):
         C_step_counter = 0
@@ -514,8 +514,8 @@ if __name__ == "__main__":
     agent = dqn_agent(env_screen)
     agent.set_env(env_headless)
     
-    agent.set_hyper_parameter(gamma=0.99, epsilon=1, alpha=0, tau=0.00005, C_step=5)
-    agent.set_epslion_decay(epsilon_decay=0.999, epsilon_min=0.1)
+    agent.set_hyper_parameter(gamma=0.99, epsilon=0.5, alpha=0, tau=0.0001, C_step=5)
+    agent.set_epslion_decay(epsilon_decay=0.9999, epsilon_min=0.1)
     
     agent.create_nn()
     
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     # agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 40
+    generation = 39
 
 
     reward_list = []
@@ -536,7 +536,7 @@ if __name__ == "__main__":
 
         reward_sum = agent.drive_model()
 
-        if len(reward_list) >= 50:
+        if len(reward_list) >= 25:
             reward_list.pop(0)
         reward_list.append(reward_sum)
 
