@@ -558,7 +558,7 @@ if __name__ == "__main__":
 
         if reward_mean >= 250:
             agent.save_model(generation, i)
-            print("leaning complete")
+            print("learning complete")
             break
 
         if i > 750:

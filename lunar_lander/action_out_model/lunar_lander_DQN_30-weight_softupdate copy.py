@@ -493,7 +493,7 @@ if __name__ == "__main__":
             print("<reward_mean : {:5}>=========".format(reward_mean))
             
             if reward_mean >= 250:
-                print("leaning complete")
+                print("learning complete")
                 break
 
         print("iter : {:10}/{}  || reward_sum {}".format(i, iter_max, reward_sum))
