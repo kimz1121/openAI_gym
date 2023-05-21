@@ -524,7 +524,7 @@ if __name__ == "__main__":
     # agent.drive_queue_init()
 
     iter_max = 1000000
-    generation = 39
+    generation = 40
 
 
     reward_list = []
