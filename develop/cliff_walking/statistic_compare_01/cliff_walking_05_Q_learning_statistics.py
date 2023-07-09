@@ -345,9 +345,9 @@ if __name__ == "__main__":
     agent.put_gym_env(env_headless)
 
     statistic = []
-    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:#학습 수준 변화
-        agent.reset_Q_talbel()
+    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:#학습 수준 변화
         for j in range(10):# 개별 사례 10 회 반복
+            agent.reset_Q_talbel()
             for k in range(i*100):#학습 반복
                 if k%100 == 0:
                     print("generation : {}, iter : {:5}/{:5}".format(j, k, i*100))
