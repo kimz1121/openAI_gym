@@ -354,7 +354,7 @@ if __name__ == "__main__":
                 # agent.drive_Q_tabel(0.1)
                 agent.drive_sarsa_tabel(0.1)
             total_step_list = []
-            for l in range(10):
+            for l in range(10):#학습 결과 평가 evaluation
                 # total_step = agent.drive_Q_tabel(0)
                 total_step = agent.drive_sarsa_tabel(0)
                 total_step_list.append(total_step)
@@ -362,8 +362,11 @@ if __name__ == "__main__":
         statistic.append(step_mean)
 
     print(statistic)
-            
         
+    string = ", ".join(statistic)#csv 형식으로 정리
+    num = 0
+    file = open("./statistics/sarsa_{:2}".format(num))
+
     # agent.put_gym_env(env_screen)
     # for i in range(100):
     #     agent.drive_sarsa_tabel(0)
