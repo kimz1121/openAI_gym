@@ -1,7 +1,7 @@
 import time
 
 import gymnasium as gym
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -346,6 +346,7 @@ if __name__ == "__main__":
 
     statistic = []
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:#학습 수준 변화
+        total_step_list = []
         for j in range(10):# 개별 사례 10 회 반복
             agent.reset_Q_talbel()
             for k in range(i*100):#학습 반복
@@ -353,7 +354,6 @@ if __name__ == "__main__":
                     print("generation : {}, iter : {:5}/{:5}".format(j, k, i*100))
                 agent.drive_Q_tabel(0.1)
                 # agent.drive_sarsa_tabel(0.1)
-            total_step_list = []
             for l in range(10):#학습 결과 평가 evaluation
                 total_step = agent.drive_Q_tabel(0)
                 # total_step = agent.drive_sarsa_tabel(0)
@@ -362,11 +362,12 @@ if __name__ == "__main__":
         statistic.append(step_mean)
 
     print(statistic)
-        
-    string = ", ".join(statistic)#csv 형식으로 정리
-    num = 0
-    file = open("./statistics/sarsa_{:2}".format(num))
-
+    
+    string = ", ".join(str(num) for num in statistic)#csv 형식으로 정리
+    i = 0
+    file = open("./statistics_Q_learning_{:0>2}.txt".format(i), "w")
+    file.write(string)
+    file.close()
     # agent.put_gym_env(env_screen)
     # for i in range(100):
     #     agent.drive_sarsa_tabel(0)
